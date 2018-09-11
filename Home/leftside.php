@@ -10,6 +10,8 @@
     <li class="header">เมนู</li>  
     <li><a href="evaluator.php"><i class="fa fa-chain"></i> <span>กำหนดการประเมิน</span></a></li>
     <li><a href="evaluate_summary.php"><i class="fa fa-pie-chart"></i> <span>สรุปผลการประเมิน</span></a></li>
+    <li class="header">ข้อมูล</li>  
+    <li><a href="topic_group_type_list.php"><i class="fa fa-list"></i> <span>ประเภทหัวข้อประเมิน</span></a></li>
     <?php break; ?>
     <?php default : } //.switch ?>
 
