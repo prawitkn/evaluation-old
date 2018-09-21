@@ -1,37 +1,53 @@
-<!DOCTYPE html>
-<!--
-This is a starter template page. Use this page to start your new project from
-scratch. This page gets rid of all links and provides the needed markup only.
--->
-<html>
-<?php include 'head.php'; 
-$rootPage = 'evaluation';
+<?php
+  include ("session.php");
+	//Check user roll.
+	switch($s_userGroupCode){
+		case 1 :  
+			break;
+		default : 
+			header('Location: access_denied.php');
+			exit();
+	}  
+  include 'head.php'; 
+?>
 
-//Check user roll.
-switch($s_userGroupCode){
-	case 1 : case 3 :
-		break;
-	default : 
-		header('Location: access_denied.php');
-		exit();
-}
-?>	<!-- head.php included session.php! -->
- 
-    
 </head>
-<body class="hold-transition skin-yellow sidebar-mini sidebar-collapse">
+<body class="hold-transition skin-yellow sidebar-mini sidebar-collapse">    
 
 <div class="wrapper">
 
   <!-- Main Header -->
-  <?php include 'header.php'; ?>
-  
+  <?php include 'header.php'; ?>  
   <!-- Left side column. contains the logo and sidebar -->
    <?php include 'leftside.php'; ?>
-   <?php
-   	$termPersonId=$_GET['tpId'];
 
-   ?>
+   <?php
+   
+   	$rootPage = 'evaluation';
+	$tb = '';
+
+	$termPersonId=( isset($_GET['tpId']) ? $_GET['tpId'] : '' );
+	$topicGroupId=( isset($_GET['tgId']) ? $_GET['tgId'] : '' );
+
+	$sql = "SELECT CONCAT(t.term,'/',t.year) as termName, p.fullName as personFullName, p.positionId
+	, pos.name as positionName, pos.positionRankId, pos.sectionId 
+	, sec.name as sectionName 
+	FROM eval_term_person tp
+	INNER JOIN eval_term t ON t.id=tp.termId 
+	INNER JOIN eval_person p ON p.id=tp.personId 
+	LEFT JOIN eval_position pos ON pos.id=p.positionId 
+	LEFT JOIN eval_section sec ON sec.id=pos.sectionId
+	WHERE 1=1
+	AND tp.id=:id ";
+
+	$stmt = $pdo->prepare($sql);				
+	$stmt->bindParam(':id', $termPersonId);
+	$stmt->execute();	
+	$row=$stmt->fetch();
+
+	$positionRankId=$row['positionRankId'];
+
+?>	
 
   <!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
@@ -52,7 +68,7 @@ switch($s_userGroupCode){
 <!-- To allow only admin to access the content -->      
     <div class="box box-primary">
         <div class="box-header with-border">
-        	<label class="box-tittle" style="font-size: 20px;"><i class="fa fa-list"></i> เลือก หัวข้อประเมินจากกลุ่มการประเมิน</label>
+        	<label class="box-tittle" style="font-size: 20px;"><i class="fa fa-list"></i> เลือก หัวข้อประเมินจากกลุ่มการประเมิน : หัวข้อมาตรฐาน</label>
 
         	<a href="javascript:history.go(-1)" class="btn btn-primary"><i class="fa fa-back"></i> กลับ</a>
 		
@@ -61,7 +77,7 @@ switch($s_userGroupCode){
           <!-- Buttons, labels, and many other things can be placed here! -->
           <!-- Here is a label for example -->
          
-          <span class="label label-primary">Total <?php echo $countTotal['countTotal']; ?> items</span>
+          <span class="label label-primary">Total <?php //echo $countTotal['countTotal']; ?> items</span>
         </div><!-- /.box-tools -->
         </div><!-- /.box-header -->
         <div class="box-body">
@@ -69,54 +85,31 @@ switch($s_userGroupCode){
 					<div class="row">
 							<div class="col-md-6">
 								<label style="font-size: 22px; color: black;" >ผู้รับการประเมิน : </label>
-								<label style="font-size: 22px; color: blue;" id="EvaluateFullName"></label>
+								<label style="font-size: 22px; color: blue;" id="evaluateFullName"><?=$row['personFullName'];?></label>
 							</div>
 							<!--/.col-md-->
 					</div>
 					<!--/.row-->
 
-					<div class="row">
-							<div class="col-md-2">					
-								<label for="positionGroupId">ประเภทผู้รับการประเมิน</label>
-								<select name="positionGroupId" id="positionGroupId" class="form form-control">
-									<?php
-										$positionGroupId=$_GET['positionGroupId'];
-										$sql = "SELECT `id`, `name` FROM `eval_position_group`";
-										$stmt = $pdo->prepare($sql);
-										$stmt->execute();	
-										While ( $row = $stmt->fetch() ){
-											$selected=($positionGroupId==$row['id']?' selected ':'');
-											echo '<option value="'.$row['id'].'" '.$selected.' >'.$row['id'].' : '.$row['name'].'</option>';
-										}
-									?>
-								</select>
-							</div>  
-							<!--/.col-md-->
-							<div class="col-md-3">					
-								<label for="topicGroupId">กลุ่มหัวข้อประเมิน</label>
-								<select name="topicGroupId" id="topicGroupId" class="form form-control">
-									<?php
-										$topicGroupId=$_GET['topicGroupId'];
-										$sql = "SELECT `id`, `name` FROM `eval_topic_group`";
-										$stmt = $pdo->prepare($sql);
-										$stmt->execute();	
-										While ( $row = $stmt->fetch() ){
-											$selected=($topicGroupId==$row['id']?' selected ':'');
-											echo '<option value="'.$row['id'].'" '.$selected.' >'.$row['id'].' : '.$row['name'].'</option>';
-										}
-									?>
-								</select>
-							</div>  
-							<!--/.col-md-->
+					<div class="row col-md-12">
+					<form id="form1" action="#" method="post" class="form form-inline" novalidate>
+		        		<label for="topicGroupId">กลุ่มหัวข้อประเมิน</label>
+						<select name="topicGroupId" id="topicGroupId" class="form form-control" disabled >
+							<?php
+								$sql = "SELECT `id`, `name` FROM `eval_topic_group`";
+								$stmt = $pdo->prepare($sql);
+								$stmt->execute();	
+								While ( $row = $stmt->fetch() ){
+									$selected=($topicGroupId==$row['id']?' selected ':'');
+									echo '<option value="'.$row['id'].'" '.$selected.' >'.$row['id'].' : '.$row['name'].'</option>';
+								}
+							?>
+						</select>
 
-							<div class="col-md-3">
-								<br/>
-								<a href="#" name="btnSubmit" class="btn btn-primary"><i class="fa fa-search"></i> ค้นหา</a>
-							</div>  
-							<!--/.col-md-->
-							
-					</div>
-					<!--/.row-->
+						<!--<a href="#" name="btnSubmit" class="btn btn-primary"><i class="fa fa-search"></i> ค้นหา</a>-->
+
+		        	</form>
+					</div>		
 			
 				</form>
 				<!--/.form1-->
@@ -126,18 +119,18 @@ switch($s_userGroupCode){
             <form id="form2" action="<?=$rootPage;?>.php" method="get" class="form form-inline" novalidate>
             <input type="hidden" name="action" value="itemSubmit" />
             <input type="hidden" name="termPersonId" value="<?=$termPersonId;?>" />
+
             <table id="tblData" class="table table-hover">
                 <thead><tr style="background-color: #ffcc99;">
-                	<th>เลือก</th>
-					<th>ลำดับ</th>
-                    <th>กลุ่ม</th>
+                	<th style="width: 100px;">เลือก</th>
+					<th style="width: 100px;">ลำดับ</th>
 					<th>รายการ</th>
                 </tr></thead>
                 <tbody>
                 	
                 </tbody>
             </table>
-            <a name="btnSubmit2" class="btn btn-default"><i class="fa fa-save"></i> Submit</a>
+            <a name="btnSubmit2" class="btn btn-default"><i class="fa fa-save"></i> บันทึก</a>
 			</form>
 			<!--/.form2-->
 
@@ -186,9 +179,9 @@ $(document).ready(function() {
 			  data: params,
 			datatype: 'json',
 			  success: function(data){	//alert(data);
-			  	if ( data.success === "success" ) {	
+			  	if ( data.status === "success" ) {	
 			  		data = $.parseJSON(data.data);
-					$('#EvaluateFullName').text(data.PersonFullName);
+					$('#evaluateFullName').text(data.personFullName);
 			  	}else{ 
 			  		alert(data.message);
 					return 0;
@@ -199,11 +192,11 @@ $(document).ready(function() {
 				alert(response.responseText);
 			}); 
 	}
-	function getListTotal(){		
+	function getListTotal(topicGroupId, positionRankId){		
 		var params = {
 			action: 'getItemByStandardListTotal',
-			positionGroupId: $('#positionGroupId').val(),
-			topicGroupId: $('#topicGroupId').val()
+			topicGroupId: topicGroupId,
+			positionRankId: positionRankId,
 		}; //alert(params.sendDate);
 		/* Send the data using post and put the results in a div */
 		$.ajax({
@@ -212,7 +205,7 @@ $(document).ready(function() {
 		  data: params,
 		datatype: 'json',
 		  success: function(data){
-		  	if ( data.success === "success" ) {
+		  	if ( data.status === "success" ) {
 		  		//alert(data.rowCount);
 				return data.rowCount;
 		  	}else{ 
@@ -225,15 +218,15 @@ $(document).ready(function() {
 			return 0;
 		}); 
 	}
-	function getList(){
-		if( getListTotal() <= 0 ) {
+	function getList(topicGroupId, positionRankId){
+		if( getListTotal(topicGroupId) <= 0 ) {
 
 		}else{	//alert('getListTotal ok');		
 			//alert(getEvaluatorList('evaluatorPersonId'));
 			var params = {
 				action: 'getItemByStandardList',
-				positionGroupId: $('#positionGroupId').val(),
-				topicGroupId: $('#topicGroupId').val()
+				topicGroupId: topicGroupId,
+				positionRankId: positionRankId,
 			}; //alert(params.sendDate);
 			/* Send the data using post and put the results in a div */
 			  $.ajax({
@@ -242,7 +235,7 @@ $(document).ready(function() {
 				  data: params,
 				datatype: 'json',
 				  success: function(data){	//alert(data);
-				  	if ( data.success === "success" ) {
+				  	if ( data.status === "success" ) {
 				  		switch(data.rowCount){
 							case 0 : //alert('Data not found.');
 								$('#tblData tbody').empty();
@@ -256,12 +249,11 @@ $(document).ready(function() {
 									$('#tblData').append(
 										'<tr>'+
 										'<td style="text-align: center;">'+
-										'<input type="checkbox" name="itmId[]" class="itmId" value="'+value.Id+'" />'+
+										'<input type="checkbox" name="itmId[]" class="itmId" value="'+value.id+'" />'+
 										'</td>'+
 										'<td style="text-align: center;">'+$rowNo+'</td>'+
-										'<td >'+value.TopicGroupName+'</td>'+
-										'<td >'+value.Name+'</td>'+
-										'<a href="#" name="btnRowDelete" data-id="'+value.Id+'" class="btn btn-danger"><i fa fa-trash></i> ลบ</a>'+
+										'<td >'+value.name+'</td>'+
+										'<a href="#" name="btnRowDelete" data-id="'+value.id+'" class="btn btn-danger"><i fa fa-trash></i> ลบ</a>'+
 										'</td>'+
 										'</tr>');
 									$rowNo+=1;
@@ -279,7 +271,8 @@ $(document).ready(function() {
 				}); 
 		}//.if rowCount <=0 
 	}
-	getHeader('<?=$termPersonId;?>');
+	//getHeader('<?=$termPersonId;?>');
+	getList('<?=$topicGroupId;?>','<?=$positionRankId;?>');
 	//
 
 	$('a[name=btnSubmit]').click(function(){ //alert('big');
@@ -299,7 +292,8 @@ $(document).ready(function() {
 					type: data.status,
 					position:'top-center'
 				});
-				location.reload();
+				
+				window.location.href = '<?=$rootPage;?>.php?tpId=<?=$termPersonId;?>&tgId=<?=$topicGroupId;?>';
 			} else {
 				alert(data.message);
 				$.smkAlert({

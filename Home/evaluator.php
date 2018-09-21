@@ -1,25 +1,26 @@
-<!DOCTYPE html>
-<!--
-This is a starter template page. Use this page to start your new project from
-scratch. This page gets rid of all links and provides the needed markup only.
--->
-<html>
-<?php include 'head.php'; 
-$rootPage = 'evaluator';
+<?php
+  include ("session.php");
+	//Check user roll.
+	switch($s_userGroupCode){
+		case 1 :  
+			break;
+		default : 
+			header('Location: access_denied.php');
+			exit();
+	}  
+  include 'head.php'; 
+?>
 
-//Check user roll.
-switch($s_userGroupCode){
-	case 1 : case 3 : 
-		break;
-	default : 
-		header('Location: access_denied.php');
-		exit();
-}
-?>	<!-- head.php included session.php! -->
- 
-    
+<?php 
+
+	$rootPage = 'evaluator';
+	$tb = 'eval_section';
+
+	$sectionId=( isset($_GET['sectionId']) ? $_GET['sectionId'] : '' );
+
+?>	
 </head>
-<body class="hold-transition skin-yellow sidebar-mini sidebar-collapse">
+<body class="hold-transition skin-yellow sidebar-mini sidebar-collapse">    
 
 <div class="wrapper">
 
@@ -28,10 +29,6 @@ switch($s_userGroupCode){
   
   <!-- Left side column. contains the logo and sidebar -->
    <?php include 'leftside.php'; ?>
-   <?php
-   		$DeptName=( isset($_GET['DeptName']) ? $_GET['DeptName'] : 'FALSE' );
-
-   ?>
 
   <!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
@@ -61,33 +58,28 @@ switch($s_userGroupCode){
           <!-- Buttons, labels, and many other things can be placed here! -->
           <!-- Here is a label for example -->
           <?php
-                //$sql_user = "SELECT COUNT(*) AS COUNTUSER FROM wh_user";
-               // $result_user = mysqli_query($link, $sql_user);
-               // $count_user = mysqli_fetch_assoc($result_user);
-				
-				$search_word="";
                 $sql = "
 				SELECT COUNT(*) AS countTotal 
 				FROM eval_term_person hdr
 				INNER JOIN eval_person ps ON ps.Id=hdr.personId ";
-				if(isset($_GET['search_word']) and isset($_GET['search_word'])){
-					$search_word=$_GET['search_word'];
-					$sql .= "and (hdr.name like '%".$_GET['search_word']."%' ) ";
-				}			
-                $result = mysqli_query($link, $sql);
-                $countTotal = mysqli_fetch_assoc($result);
+				if($sectionId<>""){ $sql .= "AND hdr.sectionId=:sectionId "; }
+
+                $stmt = $pdo->prepare($sql);	
+                if($sectionId<>""){ $stmt->bindParam(':sectionId', $sectionId); }
+				$stmt->execute();	
+				$countTotal = $stmt->fetch()['countTotal'];			
 				
 				$rows=20;
 				$page=0;
 				if( !empty($_GET["page"]) and isset($_GET["page"]) ) $page=$_GET["page"];
 				if($page<=0) $page=1;
-				$total_data=$countTotal['countTotal'];
+				$total_data=$countTotal;
 				$total_page=ceil($total_data/$rows);
 				if($page>=$total_page) $page=$total_page;
 				$start=($page-1)*$rows;
 				if($start<0) $start=0;		
           ?>
-          <span id="countTotal" class="label label-primary">Total <?php echo $countTotal['countTotal']; ?> items</span>
+          <span id="countTotal" class="label label-primary">จำนวน <?php echo $countTotal; ?> รายการ</span>
         </div><!-- /.box-tools -->
         </div><!-- /.box-header -->
         <div class="box-body">
@@ -95,15 +87,15 @@ switch($s_userGroupCode){
 				
 					<div class="row">
 							<div class="col-md-3">					
-								<label for="search_word">แผนก </label>
-								<select name="DeptName" class="form form-control">
+								<label for="sectionId">แผนก </label>
+								<select name="sectionId" class="form form-control">
 									<?php
-										$sql = "SELECT DISTINCT DeptName FROM eval_person ORDER BY DeptName";
+										$sql = "SELECT `id`, `seqNo`, `code`, `name` FROM eval_section ORDER BY seqNo, id ";
 										$stmt = $pdo->prepare($sql);
 										$stmt->execute();	
-										While ( $row = $stmt->fetch() ){
-											$selected=($DeptName==$row['DeptName']?' selected ':'');
-											echo '<option value="'.$row['DeptName'].'" '.$selected.' >'.$row['DeptName'].'</option>';
+										While ( $itm = $stmt->fetch() ){
+											$selected=($sectionId==$itm['id']?' selected ':'');
+											echo '<option value="'.$itm['id'].'" '.$selected.' >'.$itm['name'].'</option>';
 										}
 									?>
 								</select>
@@ -122,28 +114,8 @@ switch($s_userGroupCode){
 			
 			
 				</form>
-				<!--/.form1-->
-			
-           <?php
-				$sql = "
-				SELECT hdr.`Id`, hdr.`termId`, hdr.`personId`
-				, hdr.`evaluatorPersonId`, hdr.`evaluatorPersonId2`, hdr.`evaluatorPersonId3`
-				, ps.Fullname, ps.DeptName, ps.PositionName 
-				FROM eval_term_person hdr
-				INNER JOIN eval_person ps ON ps.Id=hdr.personId 
-				WHERE 1=1 ";
-				if(isset($_GET['search_word']) and isset($_GET['search_word'])){
-					$search_word=$_GET['search_word'];
-					$sql .= "and (hdr.userFullname like '%".$_GET['search_word']."%' ) ";
-				}	
-				$sql .= "ORDER BY hdr.id ASC
-						LIMIT $start, $rows 
-				";		
-                //$result = mysqli_query($link, $sql);
-				$stmt = $pdo->prepare($sql);	
-				$stmt->execute();	
-                
-           ?> 
+				<!--/.form1-->			
+
             <div class="row col-md-12 table-responsive">
 
             <form id="form2" action="<?=$rootPage;?>.php" method="get" class="form" novalidate>
@@ -202,9 +174,6 @@ switch($s_userGroupCode){
 <script src="bootstrap/js/smoke.min.js"></script>
 <script>
 $(document).ready(function() {
-	function a (){
-		return 'big';
-	}
 	function getEvaluatorList(name){
 
 		$html='';
@@ -227,7 +196,7 @@ $(document).ready(function() {
 						default : 
 							$html='<select name="'+name+'[]">';	
 							$.each($.parseJSON(data.data), function(key,value){
-								$html=$html+'<option value="'+value.Id+'" tmpSelected'+value.Id+' >'+value.Fullname+'</option>';
+								$html=$html+'<option value="'+value.id+'" tmpSelected'+value.id+' >'+value.fullName+'</option>';
 							});
 							$html=$html+'</select>';
 							//alert($html);
@@ -245,10 +214,11 @@ $(document).ready(function() {
 			//return $html;
 	}
 
-	function getListTotal(DeptName){		
+	function getListTotal(sectionId){	
+		if( sectionId == "") {return 0;	}
 		var params = {
 			action: 'getListTotal',
-			DeptName: DeptName
+			sectionId: sectionId
 		}; //alert(params.sendDate);
 		/* Send the data using post and put the results in a div */
 		$.ajax({
@@ -270,14 +240,14 @@ $(document).ready(function() {
 			return 0;
 		}); 
 	}
-	function getList(DeptName){ //alert(DeptName);
-		if( getListTotal() <= 0 ) {
+	function getList(sectionId){ //alert(DeptName);
+		if( getListTotal(sectionId) <= 0 ) {
 
 		}else{	//alert('getListTotal ok');		
 			//alert(getEvaluatorList('evaluatorPersonId'));
 			var params = {
 				action: 'getList',
-				DeptName: DeptName,
+				sectionId: sectionId,
 				start: 0,
 				rows: 200
 			}; //alert(params.sendDate);
@@ -299,7 +269,7 @@ $(document).ready(function() {
 								$sslEvaluator2='<select name="evaluatorPersonId2[]" class="form form-control" ><option value="" > - - เลือก - - </option>'
 								$sslEvaluator3='<select name="evaluatorPersonId3[]" class="form form-control" ><option value="" > - - เลือก - - </option>';	
 								$.each($.parseJSON(data.data2), function(key,value){
-									$option='<option value="'+value.Id+'" selected'+value.Id+' >'+value.Fullname+'</option>';
+									$option='<option value="'+value.id+'" selected'+value.id+' >'+value.fullName+'</option>';
 									$sslEvaluator=$sslEvaluator+$option;
 									$sslEvaluator2=$sslEvaluator2+$option;
 									$sslEvaluator3=$sslEvaluator3+$option;
@@ -311,30 +281,22 @@ $(document).ready(function() {
 								//$('#tbl_items tbody').empty();
 								$('#tblData tbody').fadeOut('slow').empty();
 								$rowNo=1;
-								/*<th>No.</th>
-			                    <th>Code</th>
-								<th>Fullname</th>
-								<th>Department</th>
-								<th>Position</th>
-								<th>Evaluator 1</th>
-								<th>Evaluator 2</th>
-								<th>Evaluator 3</th>*/
 								$.each($.parseJSON(data.data), function(key,value){
 									$sslEvaluator = $sslEvaluator.replace(new RegExp('selected'+value.evaluatorPersonId, 'g'), 'selected');
 									$sslEvaluator2 = $sslEvaluator2.replace(new RegExp('selected'+value.evaluatorPersonId2, 'g'), 'selected');
 									$sslEvaluator3 = $sslEvaluator3.replace(new RegExp('selected'+value.evaluatorPersonId3, 'g'), 'selected');
 									$('#tblData').append(
 										'<tr>'+
-										'<input type="hidden" name=Id[] value="'+value.Id+'" />'+
+										'<input type="hidden" name=Id[] value="'+value.id+'" />'+
 										'<td style="text-align: center;">'+$rowNo+'</td>'+
-										'<td style="text-align: left;">'+value.Code+'</td>'+
-										'<td style="text-align: left;">'+value.Fullname+'</td>'+
-										'<td style="text-align: left;">'+value.PositionName+'</td>'+
+										'<td style="text-align: left;">'+value.code+'</td>'+
+										'<td style="text-align: left;">'+value.fullName+'</td>'+
+										'<td style="text-align: left;">'+value.positionName+'</td>'+
 										'<td style="text-align: left;">'+$sslEvaluator+'</td>'+
 										'<td style="text-align: left;">'+$sslEvaluator2+'</td>'+
 										'<td style="text-align: left;">'+$sslEvaluator3+'</td>'+
 										'<td>'+
-										'<a href="evaluation.php?tpId='+value.Id+'" class="btn btn-primary"><i class="fa fa-edit"></i> กำหนดหัวข้อประเมิน</a>'+
+										'<a href="evaluation.php?tpId='+value.id+'" class="btn btn-primary"><i class="fa fa-edit"></i> กำหนดหัวข้อประเมิน</a>'+
 										'</td>'+
 										'</tr>');
 									$rowNo+=1;
@@ -352,7 +314,7 @@ $(document).ready(function() {
 				}); 
 		}//.if rowCount <=0 
 	}
-	getList('<?=$DeptName;?>');
+	getList('<?=$sectionId;?>');
 
 	$('a[name=btnSubmit2]').click(function(){
 		$.post({

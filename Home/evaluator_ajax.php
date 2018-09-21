@@ -9,14 +9,14 @@
 			case 'getListTotal' :
 				try{	
 
-					$DeptName=$_POST['DeptName'];
+					$sectionId=$_POST['sectionId'];
 					
 					$sql = "SELECT hdr.Id 
 					FROM eval_term_person hdr
 					INNER JOIN eval_person ps ON ps.Id=hdr.personId ";
-					if( $DeptName <> "" ) { $sql .= "WHERE ps.DeptName=:DeptName "; }
+					if( $sectionId <> "" ) { $sql .= "WHERE ps.sectionId=:sectionId "; }
 					$stmt = $pdo->prepare($sql);				
-					if( $DeptName <> "" ) { $stmt->bindParam(':DeptName', $DeptName); }
+					if( $sectionId <> "" ) { $stmt->bindParam(':sectionId', $sectionId); }
 					$stmt->execute();					
 					$rowCount=$stmt->rowCount();
 
@@ -34,18 +34,20 @@
 				try{
 					$start=$_POST['start'];
 					$rows=$_POST['rows'];
-					$DeptName=$_POST['DeptName'];
+					$sectionId=$_POST['sectionId'];
 
-					$sql = "SELECT hdr.`Id`, hdr.`termId`, hdr.`personId`
+					$sql = "SELECT hdr.`id`, hdr.`termId`, hdr.`personId`
 					, hdr.`evaluatorPersonId`, hdr.`evaluatorPersonId2`, hdr.`evaluatorPersonId3`
-					, ps.Code, ps.Fullname, ps.DeptName, ps.PositionName 
+					, ps.code, ps.fullName, ps.sectionId, ps.positionName 
+					, st.name as sectionName 
 					FROM eval_term_person hdr
-					INNER JOIN eval_person ps ON ps.Id=hdr.personId ";
-					if( $DeptName <> "" ) { $sql .= "WHERE ps.DeptName=:DeptName "; }
-					$sql .= "ORDER BY hdr.Id ASC ";
+					INNER JOIN eval_person ps ON ps.Id=hdr.personId 
+					INNER JOIN eval_section st ON st.id=ps.sectionId ";
+					if( $sectionId <> "" ) { $sql .= "WHERE ps.sectionId=:sectionId "; }
+					$sql .= "ORDER BY hdr.id ASC ";
 					//$sql.="LIMIT $start, $rows ";
 					$stmt = $pdo->prepare($sql);					
-					if( $DeptName <> "" ) { $stmt->bindParam(':DeptName', $DeptName); }
+					if( $sectionId <> "" ) { $stmt->bindParam(':sectionId', $sectionId); }
 						
 					$stmt->execute();					
 					$rowCount=$stmt->rowCount();
@@ -57,9 +59,11 @@
 
 
 					//Evaluator List
-					$sql = "SELECT hdr.`Id`, hdr.`Fullname`, hdr.`PositionName` 
-					FROM eval_person hdr ";
-					$sql .= "ORDER BY hdr.Id ASC ";
+					$sql = "SELECT hdr.`id`, hdr.`fullName`, st.name as `positionName` 
+					FROM eval_person hdr 
+					LEFT JOIN eval_section st ON st.id=hdr.id 
+					";
+					$sql .= "ORDER BY hdr.id ASC ";
 					//$sql.="LIMIT $start, $rows ";
 					$stmt2 = $pdo->prepare($sql);
 					$stmt2->execute();					

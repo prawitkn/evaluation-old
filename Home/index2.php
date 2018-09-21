@@ -1,15 +1,12 @@
-<!DOCTYPE html>
-<!--
-This is a starter template page. Use this page to start your new project from
-scratch. This page gets rid of all links and provides the needed markup only.
--->
-<html>
-<?php 
-	include 'head.php'; 
+<?php
+  include ("session.php");
+ 
+  include 'head.php'; 
 ?>
 
 </head>
-<body class="hold-transition skin-yellow sidebar-mini sidebar-collapse">
+<body class="hold-transition skin-yellow sidebar-mini">    
+  
 <div class="wrapper">
 
   <!-- Main Header -->
@@ -17,11 +14,51 @@ scratch. This page gets rid of all links and provides the needed markup only.
   
   <!-- Left side column. contains the logo and sidebar -->
    <?php include 'leftside.php'; ?>
+
    <?php
 	$rootPage = 'index';
 
-  $personId=$_GET['personId'];
-   ?>
+  //term sql
+  $termId=( isset($_GET['termId']) ? $_GET['termId'] : '' );
+
+  $sql = "SELECT hdr.id 
+  FROM eval_term hdr 
+  WHERE 1=1 ";
+  if( $termId<> "" ){ $sql .= "AND hdr.id=:id "; }
+  $sql .= "ORDER BY hdr.isCurrent DESC, hdr.id DESC ";
+  $sql .= "LIMIT 1 ";
+
+  $stmt = $pdo->prepare($sql);  
+  if( $termId<> "" ){ $stmt->bindParam(':id', $termId); }      
+  
+  $stmt->execute(); 
+  $termId=$stmt->fetch()['id'];
+
+  //personId 
+  $personId=( isset($_GET['personId']) ? $_GET['personId'] : $s_personId );
+
+  //get eval data
+  $sql = "SELECT tp.id as termPersonId, CONCAT(t.term,'/',t.year) as termName, p.fullName as personFullName, p.positionId
+  , pos.name as positionName, pos.positionRankId, pos.sectionId 
+  , sec.name as sectionName 
+  FROM eval_term_person tp
+  INNER JOIN eval_term t ON t.id=tp.termId 
+  INNER JOIN eval_person p ON p.id=tp.personId 
+  LEFT JOIN eval_position pos ON pos.id=p.positionId 
+  LEFT JOIN eval_section sec ON sec.id=pos.sectionId
+  WHERE 1=1
+  AND tp.termId=:termId 
+  AND tp.personId=:personId ";
+
+  $stmt = $pdo->prepare($sql);        
+  $stmt->bindParam(':termId', $termId);
+  $stmt->bindParam(':personId', $personId);
+  $stmt->execute(); 
+  $row=$stmt->fetch();
+
+  $termPersonId=$row['termPersonId'];
+
+  ?>
 
   <!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
@@ -50,18 +87,20 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
               <h3 class="profile-username text-center"><?=$s_username;?></h3>
 
-              <p class="text-muted text-center">Software Engineer</p>
+              <h3 class="profile-username text-center"><?=$row['personFullName'];?></h3>
 
-              <ul class="list-group list-group-unbordered">
+              <p class="text-muted text-center"><?=$row['positionName'];?></p>
+
+              <!--<ul class="list-group list-group-unbordered">
                 <li class="list-group-item">
                   <b>ผู้ประเมิน</b> <a class="pull-right">1,322</a>
                 </li>
                 <li class="list-group-item">
                   <b>ผู้รับการประเมิน</b> <a class="pull-right">543</a>
                 </li>
-              </ul>
+              </ul>-->
 
-              <a href="evaluate.php?pId=<?=$s_personId;?>" class="btn btn-primary btn-block"><b>ประเมินตนเอง</b></a>
+              <a href="evaluate.php?personId=<?=$s_personId;?>" class="btn btn-primary btn-block"><b>ประเมินตนเอง</b></a>
             </div>
             <!-- /.box-body -->
           </div>
@@ -78,50 +117,102 @@ scratch. This page gets rid of all links and provides the needed markup only.
             </ul>
             <div class="tab-content">
               <div class="active tab-pane" id="evaluator">
-                
+                   <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <td>ลำดับ</td>
+                    <td>ชื่อ นามสกุล</td>
+                    <td>ตำแหน่ง</td>
+                  </tr>
+                </thead>
+                <tbody>
+                <?php
+                $sql = "SELECT hdr.id, ps.fullName as fullName, pos.name as positionName 
+                FROM eval_term_person hdr 
+                INNER JOIN eval_person ps ON ps.id=hdr.evaluatorPersonId
+                LEFT JOIN eval_position pos ON pos.id=ps.positionId 
+                WHERE 1=1
+                AND hdr.id=:id 
+                UNION
+                SELECT hdr.id, ps.fullName as fullName, pos.name as positionName 
+                FROM eval_term_person hdr 
+                INNER JOIN eval_person ps ON ps.id=hdr.evaluatorPersonId2
+                LEFT JOIN eval_position pos ON pos.id=ps.positionId 
+                WHERE 1=1
+                AND hdr.id=:id2 
+                UNION
+                SELECT hdr.id, ps.fullName as fullName, pos.name as positionName 
+                FROM eval_term_person hdr 
+                INNER JOIN eval_person ps ON ps.id=hdr.evaluatorPersonId3
+                LEFT JOIN eval_position pos ON pos.id=ps.positionId 
+                WHERE 1=1
+                AND hdr.id=:id3 
+              ";
+                $stmt = $pdo->prepare($sql);    
+                $stmt->bindParam(':id', $termPersonId); 
+                $stmt->bindParam(':id2', $termPersonId); 
+                $stmt->bindParam(':id3', $termPersonId); 
+                $stmt->execute(); 
+                $rowNo=1; while ( $row = $stmt->fetch() ){
+                  echo '<tr>
+                  <td>'.$rowNo.'</td>
+                  <td>'.$row['fullName'].'</td>
+                  <td>'.$row['positionName'].'</td>
+                  </tr>';
+                  $rowNo+=1;
+                }
+                ?>
+              </tbody>
+            </table>
+
               </div>
               <!-- /.tab-pane -->
+
 
               <div class="tab-pane" id="evaluatetion">
 
                 <table class="table table-hover">
                 <thead>
                   <tr>
-                    <td>No.</td><td>Fullname</td><td>Department</td><td>Position Name</td><td>#</td>
+                    <td>ลำดับ</td>
+                    <td>ชื่อ นามสกุล</td>                    
+                    <td>ตำแหน่ง</td>
+                    <td>#</td>
                   </tr>
                 </thead>
+                <tbody>
                 <?php
-                $EvaluatorPersonId=$_GET['EvaluatorPersonId'];
-                $sql = "SELECT hdr.Id
-                ,ps.Fullname, ps.PositionName, ps.DeptName
+                $sql = "SELECT hdr.id, ps.fullName , pos.name as positionName 
                 FROM eval_term_person hdr 
-                INNER JOIN eval_person ps ON ps.Id=hdr.PersonId
+                INNER JOIN eval_person ps ON ps.id=hdr.personId                
+                LEFT JOIN eval_position pos ON pos.id=hdr.personId
                 WHERE 1=1
-                AND ( hdr.EvaluatorPersonId=:EvaluatorPersonId OR 
-                    hdr.EvaluatorPersonId2=:EvaluatorPersonId2 OR
-                    hdr.EvaluatorPersonId3=:EvaluatorPersonId3 
-              ) ";
+                AND ( hdr.evaluatorPersonId=:evaluatorPersonId OR 
+                    hdr.evaluatorPersonId2=:evaluatorPersonId2 OR
+                    hdr.evaluatorPersonId3=:evaluatorPersonId3 ) 
+              ";
                 $stmt = $pdo->prepare($sql);    
-                $stmt->bindParam(':EvaluatorPersonId', $s_personId); 
-                $stmt->bindParam(':EvaluatorPersonId2', $s_personId);                 
-                $stmt->bindParam(':EvaluatorPersonId3', $s_personId); 
+                $stmt->bindParam(':evaluatorPersonId', $personId); 
+                $stmt->bindParam(':evaluatorPersonId2', $personId);                 
+                $stmt->bindParam(':evaluatorPersonId3', $personId);           
                 $stmt->execute(); 
                 $rowNo=1; while ( $row = $stmt->fetch() ){
                   echo '<tr>
                   <td>'.$rowNo.'</td>
-                  <td>'.$row['Fullname'].'</td>
-                  <td>'.$row['DeptName'].'</td>
-                  <td>'.$row['PositionName'].'</td>
+                  <td>'.$row['fullName'].'</td>
+                  <td>'.$row['positionName'].'</td>
                   <td>
-                    <a href="evaluate.php?tpId='.$row['Id'].'"  
+                    <a href="evaluate.php?personId='.$row['id'].'"  
                         class="btn btn-primary"><i class="fa fa-edit"></i> ประเมิน</a>
-                    <a href="evaluate_view.php?tpId='.$row['Id'].'"  
+                    <a href="evaluate_view.php?tpId='.$row['id'].'"  
                         class="btn btn-primary"><i class="fa fa-search"></i> สรุป</a>'.
                   '</td>
                   </tr>';
                   $rowNo+=1;
                 }
                 ?>
+              </tbody>
+            </table>
               </div>
               <!-- /.tab-pane -->
 

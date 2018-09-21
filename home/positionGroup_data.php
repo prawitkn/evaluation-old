@@ -1,13 +1,30 @@
 <?php
-  //  include '../db/database.php';
+  include ("session.php");
+	//Check user roll.
+	switch($s_userGroupCode){
+		case 1 :  
+			break;
+		default : 
+			header('Location: access_denied.php');
+			exit();
+	}  
+  include 'head.php'; 
 ?>
-<!DOCTYPE html>
-<!--
-This is a starter template page. Use this page to start your new project from
-scratch. This page gets rid of all links and provides the needed markup only.
--->
-<html>
-<?php include 'head.php'; ?>
+
+<?php 
+	$rootPage = 'positionGroup';
+	$tb = 'eval_position_group';
+
+	$id=( isset( $_GET['id'] ) ? $_GET['id'] : '' );
+	//query 
+	$sql = "SELECT `id`, `seqNo`, `code`, `name`, `statusId` FROM ".$tb." WHERE id=:id ";
+    $stmt = $pdo->prepare($sql);	
+    $stmt->bindParam(':id', $id);
+	$stmt->execute();	//echo $sql;
+	$row = $stmt->fetch();
+?>	
+</head>
+<body class="hold-transition skin-yellow sidebar-mini sidebar-collapse">    
 
 <div class="wrapper">
 
@@ -17,104 +34,82 @@ scratch. This page gets rid of all links and provides the needed markup only.
   <!-- Left side column. contains the logo and sidebar -->
    <?php include 'leftside.php'; ?>
 
- <?php 
-$rootPage = 'saleDeliveryType';
-$tb = 'sale_delivery_type';
-//Check user roll.
-switch($s_userGroupCode){
-	case 'admin' : 
-		break;
-	default : 
-		header('Location: access_denied.php');
-		exit();
-}
-$id=$_GET['id'];
-
-$sql = "SELECT hdr.`id`, hdr.`code`, hdr.`name`, hdr.`statusCode`
-, hdr.`createTime`, hdr.`createById`, hdr.`updateTime`, hdr.`updateById`
-, uc.userFullname as createByName 
-, uu.userFullname as updateByName 
-FROM `".$tb."` hdr 
-LEFT JOIN `user` uc on uc.userID=hdr.createById 
-LEFT JOIN `user` uu on uu.userID=hdr.updateById 
-WHERE 1=1 
-AND hdr.id=:id 
-LIMIT 1  
-";		
-//$result = mysqli_query($link, $sql);
-$stmt = $pdo->prepare($sql);	
-$stmt->bindParam(':id', $id);	
-$stmt->execute();	
-$row=$stmt->fetch();	
-?>
-
-
   <!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
     <!-- Content Header (Page header) -->
    <section class="content-header">
-		<h1><i class="fa fa-truck"></i>
-       Sale Delivery Type
-        <small>Master management</small>
+		<h1><i class="fa fa-th-list"></i>
+       กลุ่มตำแหน่ง
+        <small>การจัดการข้อมูลหลัก</small>
       </h1>
 
 
       <ol class="breadcrumb">
-        <li><a href="<?=$rootPage;?>.php"><i class="glyphicon glyphicon-list"></i>Sale Delivery Type List</a></li>
-        <li><a href="#"><i class="glyphicon glyphicon-edit"></i>Edit Sale Delivery Type</a></li>
+       <li><a href="index.php"><i class="fa fa-home"></i>หน้าแรก</a></li>
+       <li><a href="<?=$rootPage;?>_list.php"><i class="fa fa-list"></i>รายการ กลุ่มตำแหน่ง</a></li>
       </ol>
     </section>
-
-    <!-- Main content -->
+   
+        <!-- Main content -->
     <section class="content">
 
       <!-- Your Page Content Here -->
     <div class="box box-primary">
         <div class="box-header with-border">
-        <h3 class="box-title">Edit Sale Delivery Type</h3>
+        <?php if ( $id=="" ) { ?>
+        	<h3 class="box-title">เพิ่ม ตำแหน่ง</h3>
+    	<?php }else{ ?>
+    		 <h3 class="box-title">แก้ไข ตำแหน่ง <span style="color: blue;"><?php echo $id.' : '.$row['name']; ?></span></h3>
+    	<?php } //.if id==0 ?>
+
+
         <div class="box-tools pull-right">
           <!-- Buttons, labels, and many other things can be placed here! -->
           <!-- Here is a label for example -->
          
         </div><!-- /.box-tools -->
         </div><!-- /.box-header -->
-        <div class="box-body"> 
-			<div class="row col-md-12">                
-                <form id="form1" action="userGroup_add_ajax.php" method="post" class="form" validate >
-				<input type="hidden" name="action" value="edit" />		
+        <div class="box-body">            
+            <div class="row col-md-12">                
+                <form id="form1" action="#" method="post" class="form" validate >				
+    				<input type="hidden" name="action" value="save" />	
+    				<input type="hidden" name="id" value="<?=$id;?>" />
+
 				
-				<input type="hidden" name="id" value="<?=$row['id'];?>" />
 				<div class="row">
+					<!--
 					<div class="col-md-3">					
 	                    <div class="form-group">
 	                        <label for="code">Sale Delivery Type Code</label>
-	                        <input id="code" type="text" class="form-control" name="code" value="<?=$row['code'];?>" data-smk-msg="Require user group code."required>
+	                        <input id="code" type="text" class="form-control" name="code" data-smk-msg="Require user group code."required>
 	                    </div>
 					</div>
+				-->
 					<!--/.col-md-->
 
 					<div class="col-md-6">
 						<div class="form-group">
-	                        <label for="name">Sale Delivery Type Name</label>
-	                        <input id="name" type="text" class="form-control" name="name" value="<?=$row['name'];?>" data-smk-msg="Require uer group name" required>
+	                        <label for="name">ชื่อหัวข้อกลุ่มประเมิน</label>
+	                        <input id="name" type="text" class="form-control" name="name" value="<?=$row['name'];?>" data-smk-msg="จำเป็น" required>
 	                    </div>	
 	                    
 					</div>
 					<!--/.col-md-->
-					
-					<div class="col-md-3">					
-	                    <div class="form-group">
-	                        <label for="statusCode">Status</label>
-							<input type="radio" name="statusCode" value="A" <?php echo ($row['statusCode']=='A'?' checked ':'');?> >Active
-							<input type="radio" name="statusCode" value="I" <?php echo ($row['statusCode']=='I'?' checked ':'');?> >Inactive
+
+					<div class="col-md-2" <?php echo ( $id=="" ? ' style="display: none;" ' : '' );?> >
+						<div class="form-group">
+	                        <label for="statusId">สถานะ</label><br/>
+							<input type="radio" name="statusId" value="1" <?php echo ($row['statusId']==1 ?' checked ':'');?> > เปิดใช้งาน
+							<input type="radio" name="statusId" value="0" <?php echo ($row['statusId']==0 ?' checked ':'');?> > ปิดใช้งาน
 	                    </div>
+	                   <!--form-group-->	                    
 					</div>
 					<!--/.col-md-->
 				</div>
 				<!--/.row-->	
 
 				<div class="row col-md-12">
-					<button id="btn1" type="submit" class="btn btn-default">Submit</button>
+					<button id="btnSubmit" type="submit" class="btn btn-default"><i class="fa fa-save"> บันทึก</i></button>
 				</div>
 				<!--/.row-->
 
@@ -122,16 +117,14 @@ $row=$stmt->fetch();
 				
                 </form>
             </div>
-            <!--/.row-->  
-			
-		</div>
-		<!--.body-->    
+            <!--/.row-->       
+            </div>
+			<!--.body-->    
   <div class="box-footer">
   
     <!--The footer of the box -->
   </div><!-- box-footer -->
 </div><!-- /.box -->
-  
 
 <div id="spin"></div>
 
@@ -171,13 +164,13 @@ $( document ).ajaxStart(function() {
 //   
 
 $(document).ready(function() {
-	$("#title").focus();
+	$("#name").focus();
 
 	var spinner = new Spinner().spin();
 	$("#spin").append(spinner.el);
 	$("#spin").hide();
 //           
-	$('#form1').on("submit", function(e) { 
+	$('#form1').on("submit", function(e) {
 		if ($('#form1').smkValidate()) {
 			$.ajax({
 			url: '<?=$rootPage;?>_ajax.php',
@@ -187,17 +180,17 @@ $(document).ready(function() {
 			contentType: false,
 			dataType: 'json'
 			}).done(function (data) {
-				if (data.success){  
+				if (data.status==='success'){  
 					$.smkAlert({
 						text: data.message,
-						type: 'success',
+						type: data.status,
 						position:'top-center'
-					});					
-					setTimeout(function(){history.back();}, 2000);
+					});
+					setTimeout(function(){history.back();}, 1000);
 				}else{
 					$.smkAlert({
 						text: data.message,
-						type: 'danger',
+						type: data.status,
 						position:'top-center'
 					});
 				}

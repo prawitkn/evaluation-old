@@ -1,27 +1,26 @@
+<?php
+  include ("session.php");
+	//Check user roll.
+	switch($s_userGroupCode){
+		case 1 :  
+			break;
+		default : 
+			header('Location: access_denied.php');
+			exit();
+	}  
+  include 'head.php'; 
+?>
 
-<!DOCTYPE html>
-<!--
-This is a starter template page. Use this page to start your new project from
-scratch. This page gets rid of all links and provides the needed markup only.
--->
-<html>
+<?php 
 
+	$rootPage = 'section';
+	$tb = 'eval_section';
 
-<?php include 'head.php'; 
-$rootPage = 'topic_group_type';
-$tb = 'eval_topic_group';
-//Check user roll.
-switch($s_userGroupCode){
-	case 1 : case 3 : 
-		break;
-	default : 
-		header('Location: access_denied.php');
-		exit();
-}
-?>	<!-- head.php included session.php! -->
- 
-    
-    
+	$searchWord=( isset($_GET['searchWord']) ? $_GET['searchWord'] : '' );
+
+?>	
+</head>
+<body class="hold-transition skin-yellow sidebar-mini sidebar-collapse">    
 
 <div class="wrapper">
 
@@ -35,15 +34,15 @@ switch($s_userGroupCode){
   <div class="content-wrapper">
     <!-- Content Header (Page header) -->
 	<section class="content-header">
-		<h1><i class="fa fa-truck"></i>
-       ประเภทหัวข้อ
+		<h1><i class="fa fa-th-list"></i>
+       แผนก
         <small>การจัดการข้อมูลหลัก</small>
       </h1>
 
 
       <ol class="breadcrumb">
-        <li><a href="<?=$rootPage;?>_list.php"><i class="glyphicon glyphicon-list"></i>รายการ ประเภทหัวข้อประเมิน</a></li>
-        <!--<li><a href="#"><i class="glyphicon glyphicon-edit"></i>หัวข้อการประเมิน</a></li>-->
+       <li><a href="index.php"><i class="fa fa-home"></i>หน้าแรก</a></li>
+       <!--<li><a href="<?=$rootPage;?>_list.php"><i class="fa fa-list"></i>รายการ ระดับตำแหน่ง</a></li>-->
       </ol>
     </section>
 
@@ -53,10 +52,10 @@ switch($s_userGroupCode){
 <!-- To allow only admin to access the content -->      
     <div class="box box-primary">
         <div class="box-header with-border">
-		<label class="box-title">รายการ ประเภทหัวข้อการประเมิน</label>
+		<label class="box-title">รายการ แผนก</label>
 
 
-			<a href="<?=$rootPage;?>.php?id=" class="btn btn-primary"><i class="glyphicon glyphicon-plus"></i> เพิ่ม หัวข้อการประเมิน</a>
+			<a href="<?=$rootPage;?>_data.php?id=" class="btn btn-primary"><i class="glyphicon glyphicon-plus"></i> เพิ่ม แผนก</a>
 		
 		
         <div class="box-tools pull-right">
@@ -67,18 +66,14 @@ switch($s_userGroupCode){
                // $result_user = mysqli_query($link, $sql_user);
                // $count_user = mysqli_fetch_assoc($result_user);
 				
-				$search_word="";
                 $sql = "
 				SELECT COUNT(*) AS countTotal 
 				FROM `".$tb."` hdr  
 				WHERE 1=1 ";
-				if(isset($_GET['search_word']) and isset($_GET['search_word'])){
-					$search_word=$_GET['search_word'];
-					$sql .= "and (hdr.name like '%".$_GET['search_word']."%' ) ";
-				}			
-                //$result = mysqli_query($link, $sql);
-                //$countTotal = mysqli_fetch_assoc($result);
+				if($searchWord<>""){ $sql .= "AND hdr.name like :searchWord "; }
+
                 $stmt = $pdo->prepare($sql);	
+                if($searchWord<>""){ $tmp='%'.$searchWord.'%'; $stmt->bindParam(':searchWord', $tmp); }
 				$stmt->execute();	//echo $sql;
 				$countTotal = $stmt->fetch()['countTotal'];
 				
@@ -96,22 +91,28 @@ switch($s_userGroupCode){
         </div><!-- /.box-tools -->
         </div><!-- /.box-header -->
         <div class="box-body">
-			<div class="row">
-				<div class="col-md-6">					
-					<form id="form1" action="<?=$rootPage;?>.php" method="get" class="form" novalidate>
+			<div class="row col-md-12">				
+				<form id="form1" action="<?=$rootPage;?>_list.php" method="get" class="form" novalidate>
+					<div class="col-md-6">
 						<div class="form-group">
-							<label for="search_word">Sale Price Type name search key word.</label>
-							<div class="input-group">
-								<input id="search_word" type="text" class="form-control" name="search_word" data-smk-msg="Require userFullname."required>
-								<span class="input-group-addon">
-									<span class="glyphicon glyphicon-search"></span>
-								</span>
-							</div>
-						</div>						
-						<input type="submit" class="btn btn-default" value="ค้นหา">
+	                        <label for="searchWord">บางส่วนของ ชื่อแผนก เพื่อใช้ค้นหาข้อมูล</label>
+							<input id="searchWord" type="text" class="form-control" name="searchWord" <?=$searchWord;?>" ">
+	                    </div>	
+	                    <!--form-group-->
+					</div>
+					<!--/.col-md-->
+
+					<div class="col-md-1">
+						<div class="form-group">
+	                        <label for="submit">&nbsp;</label>
+							<input type="submit" name="submit" class="form-control btn btn-default" value="ค้นหา" />
+	                    </div>	
+	                    <!--form-group-->
+					</div>
+					<!--/.col-md-->
+
+					
 					</form>
-				</div>  
-				<!--/.col-md-->
 			</div>
 			<!--/.row-->
            <?php
@@ -124,15 +125,14 @@ switch($s_userGroupCode){
 				LEFT JOIN `eval_user` uc on uc.userId=hdr.createUserId 
 				LEFT JOIN `eval_user` uu on uu.userId=hdr.updateUserId 
 				WHERE 1=1 ";
-				if(isset($_GET['search_word']) and isset($_GET['search_word'])){
-					$search_word=$_GET['search_word'];
-					$sql .= "and (hdr.name like '%".$_GET['search_word']."%' ) ";
-				}	
+				if($searchWord<>""){ $sql .= "AND hdr.name like :searchWord "; }
 				$sql .= "ORDER BY hdr.seqNo ASC
 						LIMIT $start, $rows 
 				";		
-                //$result = mysqli_query($link, $sql);
-				$stmt = $pdo->prepare($sql);	
+                
+				
+                $stmt = $pdo->prepare($sql);	
+                if($searchWord<>""){ $tmp='%'.$searchWord.'%'; $stmt->bindParam(':searchWord', $tmp); }
 				$stmt->execute();	//echo $sql;
               
            ?> 
@@ -140,22 +140,22 @@ switch($s_userGroupCode){
             	<input type="hidden" name="action" value="tableSubmit" />
             <table class="table table-striped">
                 <tr>
+					<th>ID</th>
 					<th>ลำดับ</th>
-					<th>รหัส</th>
-					<th>คำอธิบาย</th>
+					<th>ชื่อแผนก</th>
                     <th>สถานะ</th>
                     <th>#</th>
                 </tr>
                 <?php $c_row=($start+1); while ($row = $stmt->fetch()) { 
 						?>
                 <tr>
+					 <td>
+                         <?= $row['id']; ?>
+                    </td>
 					<td>
 						<input type="hidden" name="id[]" value="<?=$row['id'];?>"  />
 						<input type="text" name="seqNo[]" class="form-control" style="width: 50px; text-align: right;" value="<?=$row['seqNo'];?>" onkeypress="return numbersOnly(this, event);" 
 								onpaste="return false;" />
-                    </td>
-					 <td>
-                         <?= $row['id']; ?>
                     </td>
                     <td>
                          <?= $row['name']; ?>
@@ -164,40 +164,40 @@ switch($s_userGroupCode){
 						 <?php
 						 switch($row['statusId']){ 	
 							case 1 :
-								echo '<a class="btn btn-success" name="btn_row_setActive" data-statusId="0" data-id="'.$row['id'].'" >Active</a>';
+								echo '<a class="btn btn-success" name="btnRowSetActive" data-statusId="0" data-id="'.$row['id'].'" >เปิดใช้งาน</a>';
 								break;
 							case 0 :
-								echo '<a class="btn btn-default" name="btn_row_setActive" data-statusId="1" data-id="'.$row['id'].'" >Inactive</a>';
+								echo '<a class="btn btn-default" name="btnRowSetActive" data-statusId="1" data-id="'.$row['id'].'" >ปิดการใช้งาน</a>';
 								break;
 							case 2 : 
-								echo '<label style="color: red;" >Removed</label>';
+								echo '<label style="color: red;" >ลบถาวร</label>';
 								break;
 							default :	
-								echo '<label style="color: red;" >N/A</label>';
+								echo '<label style="color: red;" >ไม่ปรากฏ </label>';
 						}
 						 ?>
                     </td>					
                     <td>
 						
 						<?php if($row['statusId']==1){ ?>
-							<a class="btn btn-primary" name="btn_row_edit" href="<?=$rootPage;?>_edit.php?act=edit&id=<?= $row['id']; ?>" >
-								<i class="glyphicon glyphicon-edit"></i> Edit</a>	
+							<a class="btn btn-primary" name="btnRowEdit" href="<?=$rootPage;?>_data.php?act=edit&id=<?= $row['id']; ?>" >
+								<i class="glyphicon glyphicon-edit"></i> แก้ไข</a>	
 						<?php }else{ ?>	
 							<a class="btn btn-primary"  disabled  > 
-								<i class="glyphicon glyphicon-edit"></i> Edit</a>	
+								<i class="glyphicon glyphicon-edit"></i> แก้ไข</a>	
 						<?php } ?>
 						
 						<?php if($row['statusId']==0){ ?>
-							<a class="btn btn-danger" name="btn_row_remove"  data-id="<?=$row['id'];?>" > 
-								<i class="glyphicon glyphicon-remove"></i> Remove</a>	
+							<a class="btn btn-danger" name="btnRowRemove"  data-id="<?=$row['id'];?>" > 
+								<i class="glyphicon glyphicon-remove"></i> ลบถาวร</a>	
 						<?php }else{ ?>	
 							<a class="btn btn-danger"  disabled  >
-								<i class="glyphicon glyphicon-remove"></i> Remove</a>	
+								<i class="glyphicon glyphicon-remove"></i> ลบถาวร</a>	
 						<?php } ?>
 						
 						<?php if($row['statusId']==2 AND ($s_userGroupCode=='admin')){ ?>
-							<a class="btn btn-danger" name="btn_row_delete"  data-id="<?=$row['id'];?>" > 
-								<i class="glyphicon glyphicon-trash"></i> Delete</a>	
+							<a class="btn btn-danger" name="btnRowDelete"  data-id="<?=$row['id'];?>" > 
+								<i class="glyphicon glyphicon-trash"></i> ลบถาวร</a>	
 						<?php } ?>
                     </td>
                 </tr>
@@ -206,20 +206,20 @@ switch($s_userGroupCode){
 			</form>
 			<!--/.form2-->
 			
-			<a href="#" name="btnSubmit" class="btn btn-primary" >Update Sequence No.</a>
+			<a href="#" name="btnSubmit" class="btn btn-primary" ><i class="fa fa-save"></i> อัพเดต ลำดับการแสดงข้อมูลทั้งหมด</a>
 				
 			<nav>
 			<ul class="pagination">
 				<li <?php if($page==1) echo 'class="disabled"'; ?> >
-					<a href="<?=$rootPage;?>.php?search_word=<?= $search_word;?>&=page=<?= $page-1; ?>" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a>
+					<a href="<?=$rootPage;?>_list.php?searchWord=<?= $searchWord;?>&=page=<?= $page-1; ?>" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a>
 				</li>
 				<?php for($i=1; $i<=$total_page;$i++){ ?>
 				<li <?php if($page==$i) echo 'class="active"'; ?> >
-					<a href="<?=$rootPage;?>.php?search_word=<?= $search_word;?>&page=<?= $i?>" > <?= $i;?></a>			
+					<a href="<?=$rootPage;?>_list.php?searchWord=<?= $searchWord;?>&page=<?= $i?>" > <?= $i;?></a>			
 				</li>
 				<?php } ?>
 				<li <?php if($page==$total_page) echo 'class="disabled"'; ?> >
-					<a href="<?=$rootPage;?>.php?search_word=<?= $search_word;?>&page=<?=$page+1?>" aria-labels="Next"><span aria-hidden="true">&raquo;</span></a>
+					<a href="<?=$rootPage;?>_list.php?searchWord=<?= $searchWord;?>&page=<?=$page+1?>" aria-labels="Next"><span aria-hidden="true">&raquo;</span></a>
 				</li>
 			</ul>
 			</nav>
@@ -256,7 +256,7 @@ switch($s_userGroupCode){
 <script src="bootstrap/js/smoke.min.js"></script>
 <script>
 $(document).ready(function() {
-	$('a[name=btn_row_setActive]').click(function(){
+	$('a[name=btnRowSetActive]').click(function(){
 		var params = {
 			action: 'setActive',
 			id: $(this).attr('data-id'),
@@ -289,9 +289,9 @@ $(document).ready(function() {
 		}});
 		e.preventDefault();
 	});
-	//end btn_row_setActive
+	//end btnRowSetActive
 	
-	$('a[name=btn_row_remove]').click(function(){
+	$('a[name=btnRowRemove]').click(function(){
 		var params = {
 			action: 'remove',
 			id: $(this).attr('data-id')
@@ -323,9 +323,9 @@ $(document).ready(function() {
 		}});
 		e.preventDefault();
 	});
-	//end btn_row_remove
+	//end btnRowRemove
 	
-	$('a[name=btn_row_delete]').click(function(){
+	$('a[name=btnRowDelete]').click(function(){
 		var params = {
 			action: 'delete',
 			id: $(this).attr('data-id')
@@ -357,7 +357,7 @@ $(document).ready(function() {
 		}});
 		e.preventDefault();
 	});
-	//end btn_row_delete
+	//end btnRowDelete
 	
 	$('a[name=btnSubmit]').click(function(){
 		$.smkConfirm({text:'Are you sure to Submit ?',accept:'Yes', cancel:'Cancel'}, function (e){if(e){
@@ -387,7 +387,7 @@ $(document).ready(function() {
 		}});
 		e.preventDefault();
 	});
-	//end btn_row_delete
+	//end btnSubmit
 });
 </script>
 

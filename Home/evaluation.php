@@ -1,23 +1,25 @@
-<!DOCTYPE html>
-<!--
-This is a starter template page. Use this page to start your new project from
-scratch. This page gets rid of all links and provides the needed markup only.
--->
-<html>
-<?php include 'head.php'; 
-$rootPage = 'evaluation';
+<?php
+  include ("session.php");
+	//Check user roll.
+	switch($s_userGroupCode){
+		case 1 :  
+			break;
+		default : 
+			header('Location: access_denied.php');
+			exit();
+	}  
+  include 'head.php'; 
+?>
 
-//Check user roll.
-switch($s_userGroupCode){
-	case 1 : case 3 :
-		break;
-	default : 
-		header('Location: access_denied.php');
-		exit();
-}
-?>	<!-- head.php included session.php! -->
- 
-    
+<?php 
+
+	$rootPage = 'evaluation';
+	$tb = '';
+
+   	$termPersonId=( isset($_GET['tpId']) ? $_GET['tpId'] : '' );
+   	$topicGroupId=( isset($_GET['tgId']) ? $_GET['tgId'] : '1' );
+
+?>	
 </head>
 <body class="hold-transition skin-yellow sidebar-mini sidebar-collapse">
 
@@ -29,22 +31,8 @@ switch($s_userGroupCode){
   <!-- Left side column. contains the logo and sidebar -->
    <?php include 'leftside.php'; ?>
    <?php
-   	$termPersonId=$_GET['tpId'];
 
-
-   	$sql = "SELECT `Id`, `TermId`, `PersonId`, `EvaluatorPersonId`, `EvaluatorPersonId2`, `EvaluatorPersonId3` 
-	FROM `eval_term_person` 
-	WHERE Id=:Id 
-	";
-	$stmt = $pdo->prepare($sql);
-	$stmt->bindParam(':Id', $termPersonId);
-	$stmt->execute();
-	$row = $stmt->fetch();	
-	$TermId=$row['TermId'];
-	$PersonId=$row['PersonId'];
-	$EvaluatorPersonId=$row['EvaluatorPersonId'];
-	$EvaluatorPersonId2=$row['EvaluatorPersonId2'];
-	$EvaluatorPersonId3=$row['EvaluatorPersonId3'];
+   	
    ?>
 
   <!-- Content Wrapper. Contains page content -->
@@ -70,33 +58,57 @@ switch($s_userGroupCode){
 
         	<a href="javascript:history.go(-1)" class="btn btn-primary"><i class="fa fa-back"></i> กลับ</a>
 
-			<a href="<?=$rootPage;?>_add.php?tpId=<?=$termPersonId;?>" class="btn btn-primary"><i class="fa fa-plus"></i> เพิ่มจาก หัวข้อมาตรฐาน</a>
 
-			<a href="<?=$rootPage;?>_add_person.php?tpId=<?=$termPersonId;?>&pId=<?=$PersonId;?>" class="btn btn-primary"><i class="fa fa-plus"></i> เพิ่มจาก หัวข้อรายบุคคล</a>
+
+			
 		
 		
-        <div class="box-tools pull-right">
-          <!-- Buttons, labels, and many other things can be placed here! -->
-          <!-- Here is a label for example -->
-         
-          <span class="label label-primary">Total <?php echo $countTotal['countTotal']; ?> items</span>
-        </div><!-- /.box-tools -->
-        </div><!-- /.box-header -->
+	        <div class="box-tools pull-right">
+	          <!-- Buttons, labels, and many other things can be placed here! -->
+	          <!-- Here is a label for example -->
+	         
+	          <span class="label label-primary">Total <?php echo $countTotal['countTotal']; ?> items</span>
+	        </div>
+	        <!-- /.box-tools -->
+        </div>
+        <!-- /.box-header -->
+
         <div class="box-body">
-				<form id="form1" action="<?=$rootPage;?>.php" method="get" class="form form-inline" novalidate>
-				
-					<div class="row">
-							<div class="col-md-6">
-								<label style="font-size: 22px; color: black;" >ผู้รับการประเมิน : </label>
-								<label style="font-size: 22px; color: blue;" id="EvaluateFullName"></label>
-							</div>
-							<!--/.col-md-->
+			
+			<div class="row">
+					<div class="col-md-12">
+						<label style="font-size: 22px; color: black;" >ผู้รับการประเมิน : </label>
+						<label style="font-size: 22px; color: blue;" id="evaluateFullName"></label>
+
+						
 					</div>
-					<!--/.row-->
-			
-			
-				</form>
-				<!--/.form1-->
+					<!--/.col-md-->
+
+
+			</div>
+			<!--/.row-->
+
+			<div class="row col-md-12">
+			<form id="form1" action="#" method="post" class="form form-inline" novalidate>
+        		<label for="topicGroupId">กลุ่มหัวข้อประเมิน</label>
+				<select name="topicGroupId" id="topicGroupId" class="form form-control">
+					<?php
+						$sql = "SELECT `id`, `name` FROM `eval_topic_group`";
+						$stmt = $pdo->prepare($sql);
+						$stmt->execute();	
+						While ( $row = $stmt->fetch() ){
+							$selected=($topicGroupId==$row['id']?' selected ':'');
+							echo '<option value="'.$row['id'].'" '.$selected.' >'.$row['id'].' : '.$row['name'].'</option>';
+						}
+					?>
+				</select>
+				<a href="#" name="btnSearch" class="btn btn-primary"><i class="fa fa-search"></i> ดูข้อมูล</a>
+
+				<a href="#" name="btnAddStandard" class="btn btn-primary"><i class="fa fa-plus"></i> เพิ่มจาก หัวข้อมาตรฐาน</a>
+
+				<a href="#" name="btnAddPosition" class="btn btn-primary"><i class="fa fa-plus"></i> เพิ่มจาก ตำแหน่ง</a>
+        	</form>
+			</div>			
           
             <div class="row col-md-12 table-responsive">
 
@@ -104,9 +116,7 @@ switch($s_userGroupCode){
             <input type="hidden" name="action" value="itemSubmit" />
             <table id="tblData" class="table table-hover">
                 <thead><tr style="background-color: #ffcc99;">
-					<th>ข้อที่</th>
-                    <th>กลุ่ม</th>
-					<th>ลำดับ</th>
+					<th style="width: 100px;">ลำดับ</th>
 					<th>รายการ</th>
 					<th>#</th>
                 </tr></thead>
@@ -164,9 +174,9 @@ $(document).ready(function() {
 			  data: params,
 			datatype: 'json',
 			  success: function(data){	//alert(data);
-			  	if ( data.success === "success" ) {	
+			  	if ( data.status === "success" ) {	
 			  		data = $.parseJSON(data.data);
-					$('#EvaluateFullName').text(data.PersonFullName);
+					$('#evaluateFullName').text(data.personFullName);
 			  	}else{ 
 			  		alert(data.message);
 					return 0;
@@ -177,11 +187,12 @@ $(document).ready(function() {
 				alert(response.responseText);
 			}); 
 	}
-	function getListTotal(termPersonId){		
+	function getListTotal(termPersonId, topicGroupId){		
 		var params = {
 			action: 'getListTotal',
-			termPersonId: termPersonId
-		}; //alert(params.sendDate);
+			termPersonId: termPersonId,
+			topicGroupId: topicGroupId
+		}; 
 		/* Send the data using post and put the results in a div */
 		$.ajax({
 		  url: "<?=$rootPage;?>_ajax.php",
@@ -189,7 +200,7 @@ $(document).ready(function() {
 		  data: params,
 		datatype: 'json',
 		  success: function(data){
-		  	if ( data.success === "success" ) {
+		  	if ( data.status === "success" ) {
 		  		//alert(data.rowCount);
 				return data.rowCount;
 		  	}else{ 
@@ -202,14 +213,15 @@ $(document).ready(function() {
 			return 0;
 		}); 
 	}
-	function getList(termPersonId){
-		if( getListTotal(termPersonId) <= 0 ) {
+	function getList(termPersonId, topicGroupId){ //alert('getList');
+		if( getListTotal(termPersonId, topicGroupId) <= 0 ) {
 
 		}else{	//alert('getListTotal ok');		
 			//alert(getEvaluatorList('evaluatorPersonId'));
 			var params = {
 				action: 'getList',
-				termPersonId: termPersonId
+				termPersonId: termPersonId,
+				topicGroupId: topicGroupId
 			}; //alert(params.sendDate);
 			/* Send the data using post and put the results in a div */
 			  $.ajax({
@@ -218,7 +230,7 @@ $(document).ready(function() {
 				  data: params,
 				datatype: 'json',
 				  success: function(data){	//alert(data);
-				  	if ( data.success === "success" ) {
+				  	if ( data.status === "success" ) {
 				  		switch(data.rowCount){
 							case 0 : alert('Data not found.');
 								//$('#tbl_items tbody').empty();
@@ -230,13 +242,11 @@ $(document).ready(function() {
 								$.each($.parseJSON(data.data), function(key,value){ 
 									$('#tblData').append(
 										'<tr>'+
-										'<input type="hidden" name=Id[] value="'+value.Id+'" />'+
-										'<td>'+$rowNo+'</td>'+
-										'<td>'+value.topicGroupName+'</td>'+
-										'<td>'+value.SeqNo+'</td>'+
+										'<input type="hidden" name=Id[] value="'+value.id+'" />'+
+										'<td>'+value.seqNo+'</td>'+
 										'<td>'+value.topicName+'</td>'+
 										'<td>'+
-										'<a href="#" name="btnRowDelete" data-id="'+value.Id+'" class="btn btn-danger"><i fa fa-trash></i> ลบ</a>'+
+										'<a href="#" name="btnRowDelete" data-id="'+value.id+'" class="btn btn-danger"><i fa fa-trash></i> ลบ</a>'+
 										'</td>'+
 										'</tr>');
 									$rowNo+=1;
@@ -255,13 +265,13 @@ $(document).ready(function() {
 		}//.if rowCount <=0 
 	}
 	getHeader('<?=$termPersonId;?>');
-	getList('<?=$termPersonId;?>');
+	getList('<?=$termPersonId;?>','<?=$topicGroupId;?>');
 
 	$('#tblData').on("click", "a[name=btnRowDelete]", function(){
 		
 		var params = {
 			action: 'itmDelete',
-			Id: $(this).attr('data-id')
+			id: $(this).attr('data-id')
 		};
 		$.smkConfirm({text:'Are you sure to Delete ?',accept:'Yes', cancel:'Cancel'}, function (e){if(e){
 			$.post({
@@ -275,7 +285,9 @@ $(document).ready(function() {
 						type: data.status,
 						position:'top-center'
 					});
-					location.reload();
+					
+					var topicGroupId=$('#topicGroupId').val();
+					getList('<?=$termPersonId;?>', topicGroupId);
 				} else {
 					alert(data.message);
 					$.smkAlert({
@@ -290,6 +302,27 @@ $(document).ready(function() {
 		e.preventDefault();
 	});
 	//end btn_row_delete
+
+	$('a[name=btnSearch]').click(function(){	//alert('btnSearch');
+		var topicGroupId=$('#topicGroupId').val();
+		getList('<?=$termPersonId;?>', topicGroupId);
+
+	});
+	//end btnAddStandard
+
+	$('a[name=btnAddStandard]').click(function(){	 
+		var topicGroupId=$('#topicGroupId').val();
+		window.location.href = '<?php echo $rootPage; ?>_add.php?tpId=<?php echo $termPersonId; ?>&tgId='+topicGroupId;
+
+	});
+	//end btnAddStandard
+
+	$('a[name=btnAddPosition]').click(function(){	 
+		var topicGroupId=$('#topicGroupId').val();
+		window.location.href = '<?php echo $rootPage; ?>_add_position.php?tpId=<?php echo $termPersonId; ?>&tgId='+topicGroupId;
+
+	});
+	//end btnAddStandard
 });
 </script>
 <!-- Optionally, you can add Slimscroll and FastClick plugins.

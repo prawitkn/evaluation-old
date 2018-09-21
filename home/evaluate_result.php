@@ -1,25 +1,25 @@
-<!DOCTYPE html>
-<!--
-This is a starter template page. Use this page to start your new project from
-scratch. This page gets rid of all links and provides the needed markup only.
--->
-<html>
-<?php include 'head.php'; 
-$rootPage = 'evaluate_summary';
+<?php
+  include ("session.php");
+	//Check user roll.
+	switch($s_userGroupCode){
+		case 1 :  
+			break;
+		default : 
+			header('Location: access_denied.php');
+			exit();
+	}  
+  include 'head.php'; 
+?>
 
-//Check user roll.
-switch($s_userGroupCode){
-	case 1 : case 3 : 
-		break;
-	default : 
-		header('Location: access_denied.php');
-		exit();
-}
-?>	<!-- head.php included session.php! -->
- 
-    
+<?php 
+	$rootPage = 'evaluate_result';
+	$tb = '';
+
+	//$searchWord=( isset($_GET['searchWord']) ? $_GET['searchWord'] : '' );
+	//$positionRankId=( isset($_GET['positionRankId']) ? $_GET['positionRankId'] : '' );
+?>	
 </head>
-<body class="hold-transition skin-yellow sidebar-mini sidebar-collapse">
+<body class="hold-transition skin-yellow sidebar-mini sidebar-collapse">    
 
 <div class="wrapper">
 
@@ -28,8 +28,9 @@ switch($s_userGroupCode){
   
   <!-- Left side column. contains the logo and sidebar -->
    <?php include 'leftside.php'; ?>
+
    <?php
-   		$DeptName=( isset($_GET['DeptName']) ? $_GET['DeptName'] : 'FALSE' );
+   		$sectionId=( isset($_GET['sectionId']) ? $_GET['sectionId'] : '' );
 
    ?>
 
@@ -61,33 +62,28 @@ switch($s_userGroupCode){
           <!-- Buttons, labels, and many other things can be placed here! -->
           <!-- Here is a label for example -->
           <?php
-                //$sql_user = "SELECT COUNT(*) AS COUNTUSER FROM wh_user";
-               // $result_user = mysqli_query($link, $sql_user);
-               // $count_user = mysqli_fetch_assoc($result_user);
-				
-				$search_word="";
                 $sql = "
 				SELECT COUNT(*) AS countTotal 
 				FROM eval_term_person hdr
 				INNER JOIN eval_person ps ON ps.Id=hdr.personId ";
-				if(isset($_GET['search_word']) and isset($_GET['search_word'])){
-					$search_word=$_GET['search_word'];
-					$sql .= "and (hdr.name like '%".$_GET['search_word']."%' ) ";
-				}			
-                $result = mysqli_query($link, $sql);
-                $countTotal = mysqli_fetch_assoc($result);
+				if($sectionId<>""){ $sql .= "AND hdr.sectionId=:sectionId "; }
+
+                $stmt = $pdo->prepare($sql);	
+                if($sectionId<>""){ $stmt->bindParam(':sectionId', $sectionId); }
+				$stmt->execute();	
+				$countTotal = $stmt->fetch()['countTotal'];			
 				
 				$rows=20;
 				$page=0;
 				if( !empty($_GET["page"]) and isset($_GET["page"]) ) $page=$_GET["page"];
 				if($page<=0) $page=1;
-				$total_data=$countTotal['countTotal'];
+				$total_data=$countTotal;
 				$total_page=ceil($total_data/$rows);
 				if($page>=$total_page) $page=$total_page;
 				$start=($page-1)*$rows;
 				if($start<0) $start=0;		
           ?>
-          <span id="countTotal" class="label label-primary">Total <?php echo $countTotal['countTotal']; ?> items</span>
+          <span id="countTotal" class="label label-primary">จำนวน <?php echo $countTotal; ?> รายการ</span>
         </div><!-- /.box-tools -->
         </div><!-- /.box-header -->
         <div class="box-body">
@@ -95,15 +91,15 @@ switch($s_userGroupCode){
 				
 					<div class="row">
 							<div class="col-md-3">					
-								<label for="search_word">แผนก </label>
-								<select name="DeptName" class="form form-control">
+								<label for="sectionId">แผนก </label>
+								<select name="sectionId" class="form form-control">
 									<?php
-										$sql = "SELECT DISTINCT DeptName FROM eval_person ORDER BY DeptName";
+										$sql = "SELECT `id`, `seqNo`, `code`, `name` FROM eval_section ORDER BY seqNo, id ";
 										$stmt = $pdo->prepare($sql);
 										$stmt->execute();	
-										While ( $row = $stmt->fetch() ){
-											$selected=($DeptName==$row['DeptName']?' selected ':'');
-											echo '<option value="'.$row['DeptName'].'" '.$selected.' >'.$row['DeptName'].'</option>';
+										While ( $itm = $stmt->fetch() ){
+											$selected=($sectionId==$itm['id']?' selected ':'');
+											echo '<option value="'.$itm['id'].'" '.$selected.' >'.$itm['name'].'</option>';
 										}
 									?>
 								</select>
@@ -122,7 +118,7 @@ switch($s_userGroupCode){
 			
 			
 				</form>
-				<!--/.form1-->
+				<!--/.form1-->	
 			
            <?php
 				$sql = "
@@ -153,7 +149,6 @@ switch($s_userGroupCode){
 					<th>ลำดำ</th>
                     <th>รหัส</th>
 					<th>ชื่อ นามสกุล</th>
-					<th>แผนก</th>
 					<th>ตำแหน่ง</th>
 					<th>ผู้ประเมินคนที่ 1</th>
 					<th>ผู้ประเมินคนที่ 2</th>
@@ -204,53 +199,11 @@ switch($s_userGroupCode){
 <script src="bootstrap/js/smoke.min.js"></script>
 <script>
 $(document).ready(function() {
-	function a (){
-		return 'big';
-	}
-	function getEvaluatorList(name){
-
-		$html='';
-		var params = {
-			action: 'getEvaluatorList'
-		}; //alert(params.sendDate);
-		/* Send the data using post and put the results in a div */
-		  $.ajax({
-			  url: "<?=$rootPage;?>_ajax.php",
-			  type: "post",
-			  data: params,
-			datatype: 'json',
-			  success: function(data){	
-			  	if ( data.success === "success" ) {
-			  		alert(data.rowCount);
-			  		switch(data.rowCount){
-						case 0 : alert('Data not found.');
-							//$('#tbl_items tbody').empty();
-							return false; break;
-						default : 
-							$html='<select name="'+name+'[]">';	
-							$.each($.parseJSON(data.data), function(key,value){
-								$html=$html+'<option value="'+value.Id+'" tmpSelected'+value.Id+' >'+value.Fullname+'</option>';
-							});
-							$html=$html+'</select>';
-							//alert($html);
-							return $html;
-					}//.switch
-			  	}else{ 
-			  		alert(data.message);
-					return '';
-			  	}
-					
-			  }   
-			}).error(function (response) {
-				alert(response.responseText);
-			}); 
-			//return $html;
-	}
-
-	function getListTotal(DeptName){		
+	
+	function getListTotal(sectionId){		
 		var params = {
 			action: 'getListTotal',
-			DeptName: DeptName
+			sectionId: sectionId
 		}; //alert(params.sendDate);
 		/* Send the data using post and put the results in a div */
 		$.ajax({
@@ -272,14 +225,14 @@ $(document).ready(function() {
 			return 0;
 		}); 
 	}
-	function getList(DeptName){ //alert(DeptName);
-		if( getListTotal() <= 0 ) {
+	function getList(sectionId){ //alert(sectionId);
+		if( getListTotal(sectionId) <= 0 ) {
 
 		}else{	//alert('getListTotal ok');		
 			//alert(getEvaluatorList('evaluatorPersonId'));
 			var params = {
 				action: 'getList',
-				DeptName: DeptName,
+				sectionId: sectionId,
 				start: 0,
 				rows: 200
 			}; //alert(params.sendDate);
@@ -299,28 +252,19 @@ $(document).ready(function() {
 								//$('#tbl_items tbody').empty();
 								$('#tblData tbody').fadeOut('slow').empty();
 								$rowNo=1;
-								/*<th>No.</th>
-			                    <th>Code</th>
-								<th>Fullname</th>
-								<th>Department</th>
-								<th>Position</th>
-								<th>Evaluator 1</th>
-								<th>Evaluator 2</th>
-								<th>Evaluator 3</th>*/
 								$.each($.parseJSON(data.data), function(key,value){ 
 									$('#tblData').append(
 										'<tr>'+
-										'<input type="hidden" name=Id[] value="'+value.Id+'" />'+
+										'<input type="hidden" name=Id[] value="'+value.id+'" />'+
 										'<td style="text-align: center;">'+$rowNo+'</td>'+
-										'<td style="text-align: left;">'+value.Code+'</td>'+
-										'<td style="text-align: left;">'+value.Fullname+'</td>'+
-										'<td style="text-align: left;">'+value.DeptName+'</td>'+
-										'<td style="text-align: left;">'+value.PositionName+'</td>'+
-										'<td style="text-align: left;">'+value.Score+'</td>'+
-										'<td style="text-align: left;">'+value.Score2+'</td>'+
-										'<td style="text-align: left;">'+value.Score3+'</td>'+
-										'<td style="text-align: left;">'+(value.Score+value.Score2+value.Score3)/3+'</td>'+
-										'<td><a target="_blank" href="evaluate_view.php?tpId='+value.Id+'" class="btn btn-primary"><i fa fa-static></i> สรุป</a></td>'+
+										'<td style="text-align: left;">'+value.code+'</td>'+
+										'<td style="text-align: left;">'+value.fullName+'</td>'+
+										'<td style="text-align: left;">'+value.positionName+'</td>'+
+										'<td style="text-align: left;">'+value.score+'</td>'+
+										'<td style="text-align: left;">'+value.score2+'</td>'+
+										'<td style="text-align: left;">'+value.score3+'</td>'+
+										'<td style="text-align: left;">'+value.avgScore+'</td>'+
+										'<td><a href="evaluate_view.php?tpId='+value.id+'" class="btn btn-primary"><i fa fa-static></i> สรุป</a></td>'+
 										'</tr>');
 									$rowNo+=1;
 								});
@@ -337,7 +281,7 @@ $(document).ready(function() {
 				}); 
 		}//.if rowCount <=0 
 	}
-	getList('<?=$DeptName;?>');
+	getList('<?=$sectionId;?>');
 
 	$('a[name=btnSubmit2]').click(function(){
 		$.post({

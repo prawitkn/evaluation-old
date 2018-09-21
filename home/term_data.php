@@ -1,25 +1,18 @@
 <?php
-  //  include '../db/database.php';
+  include ("session.php");
+	//Check user roll.
+	switch($s_userGroupCode){
+		case 1 :  
+			break;
+		default : 
+			header('Location: access_denied.php');
+			exit();
+	}  
+  include 'head.php'; 
 ?>
-<!DOCTYPE html>
-<!--
-This is a starter template page. Use this page to start your new project from
-scratch. This page gets rid of all links and provides the needed markup only.
--->
-<html>
-<?php include 'head.php'; 
-$rootPage = 'saleDeliveryType';
-$tb = 'sale_delivery_type';
 
-//Check user roll.
-switch($s_userGroupCode){
-	case 1 : case 3 :  
-		break;
-	default : 
-		header('Location: access_denied.php');
-		exit();
-}
-?>
+</head>
+<body class="hold-transition skin-yellow sidebar-mini sidebar-collapse">    
 
 <div class="wrapper">
 
@@ -28,20 +21,35 @@ switch($s_userGroupCode){
   
   <!-- Left side column. contains the logo and sidebar -->
    <?php include 'leftside.php'; ?>
+   
+   <?php 
+
+	$rootPage = 'term';
+	$tb = 'eval_term';
+	
+	$id=( isset( $_GET['id'] ) ? $_GET['id'] : '' );
+	//query 
+	$sql = "SELECT `id`, `seqNo`, `year`, `term`, `statusId` FROM ".$tb." WHERE id=:id ";
+    $stmt = $pdo->prepare($sql);	
+    $stmt->bindParam(':id', $id);
+	$stmt->execute();	//echo $sql;
+	$row = $stmt->fetch();
+	
+	?>
 
   <!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
     <!-- Content Header (Page header) -->
-    <section class="content-header">
-		<h1><i class="fa fa-truck"></i>
-       Sale Delivery Type
-        <small>Master management</small>
+   <section class="content-header">
+		<h1><i class="fa fa-th-list"></i>
+       ห้วงเวลาการประเมิน
+        <small>การจัดการข้อมูลหลัก</small>
       </h1>
 
 
       <ol class="breadcrumb">
-        <li><a href="<?=$rootPage;?>.php"><i class="glyphicon glyphicon-list"></i>Sale Delivery Type List</a></li>
-        <li><a href="#"><i class="glyphicon glyphicon-edit"></i>Add Sale Delivery Type</a></li>
+       <li><a href="index.php"><i class="fa fa-home"></i>หน้าแรก</a></li>
+       <li><a href="<?=$rootPage;?>_list.php"><i class="fa fa-list"></i>รายการ ห้วงเวลาการประเมิน</a></li>
       </ol>
     </section>
    
@@ -51,7 +59,13 @@ switch($s_userGroupCode){
       <!-- Your Page Content Here -->
     <div class="box box-primary">
         <div class="box-header with-border">
-        <h3 class="box-title">Add Sale Delivery Type</h3>
+        <?php if ( $id=="" ) { ?>
+        	<h3 class="box-title">เพิ่ม ห้วงเวลาการประเมิน</h3>
+    	<?php }else{ ?>
+    		 <h3 class="box-title">แก้ไข ห้วงเวลาการประเมิน <span style="color: blue;"><?php echo $id.' : '.$row['term'].' / '.$row['year']; ?></span></h3>
+    	<?php } //.if id==0 ?>
+
+
         <div class="box-tools pull-right">
           <!-- Buttons, labels, and many other things can be placed here! -->
           <!-- Here is a label for example -->
@@ -60,32 +74,44 @@ switch($s_userGroupCode){
         </div><!-- /.box-header -->
         <div class="box-body">            
             <div class="row col-md-12">                
-                <form id="form1" action="userGroup_add_ajax.php" method="post" class="form" validate >
-				<input type="hidden" name="action" value="add" />	
-				<div class="row">
-					<!--
-					<div class="col-md-3">					
+                <form id="form1" action="#" method="post" class="form" validate >				
+    				<input type="hidden" name="action" value="save" />	
+    				<input type="hidden" name="id" value="<?=$id;?>" />
+
+				
+				<div class="row">					
+					<div class="col-md-2">					
 	                    <div class="form-group">
-	                        <label for="code">Sale Delivery Type Code</label>
-	                        <input id="code" type="text" class="form-control" name="code" data-smk-msg="Require user group code."required>
+	                        <label for="year">ปี การประเมิน</label>
+	                        <input id="year" type="text" class="form-control" name="year" value="<?=$row['year'];?>" data-smk-msg="จำเป็น"required>
 	                    </div>
 					</div>
-				-->
+				
 					<!--/.col-md-->
 
-					<div class="col-md-6">
+					<div class="col-md-2">
 						<div class="form-group">
-	                        <label for="name">Sale Delivery Type Name</label>
-	                        <input id="name" type="text" class="form-control" name="name" data-smk-msg="Require uer group name" required>
+	                        <label for="term">ครั้งที่ การประเมิน</label>
+	                        <input id="term" type="text" class="form-control" name="term" value="<?=$row['term'];?>" data-smk-msg="จำเป็น" required>
 	                    </div>	
 	                    
+					</div>
+					<!--/.col-md-->
+
+					<div class="col-md-2" <?php echo ( $id=="" ? ' style="display: none;" ' : '' );?> >
+						<div class="form-group">
+	                        <label for="statusId">สถานะ</label><br/>
+							<input type="radio" name="statusId" value="1" <?php echo ($row['statusId']==1 ?' checked ':'');?> > เปิดใช้งาน
+							<input type="radio" name="statusId" value="0" <?php echo ($row['statusId']==0 ?' checked ':'');?> > ปิดใช้งาน
+	                    </div>
+	                   <!--form-group-->	                    
 					</div>
 					<!--/.col-md-->
 				</div>
 				<!--/.row-->	
 
 				<div class="row col-md-12">
-					<button id="btn1" type="submit" class="btn btn-default">Submit</button>
+					<button id="btnSubmit" type="submit" class="btn btn-default"><i class="fa fa-save"> บันทึก</i></button>
 				</div>
 				<!--/.row-->
 
@@ -140,7 +166,7 @@ $( document ).ajaxStart(function() {
 //   
 
 $(document).ready(function() {
-	$("#code").focus();
+	$("#name").focus();
 
 	var spinner = new Spinner().spin();
 	$("#spin").append(spinner.el);
@@ -156,21 +182,20 @@ $(document).ready(function() {
 			contentType: false,
 			dataType: 'json'
 			}).done(function (data) {
-				if (data.success){  
+				if (data.status==='success'){  
 					$.smkAlert({
 						text: data.message,
-						type: 'success',
+						type: data.status,
 						position:'top-center'
 					});
+					setTimeout(function(){history.back();}, 1000);
 				}else{
 					$.smkAlert({
 						text: data.message,
-						type: 'danger',
+						type: data.status,
 						position:'top-center'
 					});
 				}
-				$('#form1')[0].reset();
-				$("#code").focus(); 
 			})
 			.error(function (response) {
 				  alert(response.responseText);

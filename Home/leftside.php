@@ -9,9 +9,17 @@
     <?php switch($s_userGroupCode){  case 1 : case 3 : ?>
     <li class="header">เมนู</li>  
     <li><a href="evaluator.php"><i class="fa fa-chain"></i> <span>กำหนดการประเมิน</span></a></li>
-    <li><a href="evaluate_summary.php"><i class="fa fa-pie-chart"></i> <span>สรุปผลการประเมิน</span></a></li>
+    <li><a href="evaluate_result.php"><i class="fa fa-pie-chart"></i> <span>สรุปผลการประเมิน</span></a></li>
     <li class="header">ข้อมูล</li>  
-    <li><a href="topic_group_type_list.php"><i class="fa fa-list"></i> <span>ประเภทหัวข้อประเมิน</span></a></li>
+    <li><a href="term_list.php"><i class="fa fa-list"></i> <span>ห้วงเวลาการประเมิน</span></a></li>
+    <li><a href="topicGroup_list.php"><i class="fa fa-list"></i> <span>กลุ่มหัวข้อการประเมิน</span></a></li>
+    <li><a href="topic_list.php"><i class="fa fa-list"></i> <span>หัวข้อประเมิน</span></a></li>
+
+    <li><a href="section_list.php"><i class="fa fa-list"></i> <span>แผนก</span></a></li>
+    <li><a href="positionRank_list.php"><i class="fa fa-list"></i> <span>ระดับตำแหน่ง</span></a></li>
+    <li><a href="positionGroup_list.php"><i class="fa fa-list"></i> <span>กลุ่มตำแหน่ง</span></a></li>
+    <li><a href="position_list.php"><i class="fa fa-list"></i> <span>ตำแหน่ง</span></a></li>
+
     <?php break; ?>
     <?php default : } //.switch ?>
 

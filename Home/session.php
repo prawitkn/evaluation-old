@@ -29,12 +29,12 @@
 
 		//Evaluate data
 		$s_personId='0';
-		$sql = "SELECT Id FROM eval_person WHERE Code=:Code LIMIT 1 ";
+		$sql = "SELECT id FROM eval_person WHERE code=:code LIMIT 1 ";
 		$stmt=$pdo->prepare($sql);
-		$stmt->bindParam(':Code', $s_username);
+		$stmt->bindParam(':code', $s_username);
 		$stmt->execute();
 		if($stmt->rowCount()==1){			
-			$s_personId=$stmt->fetch()['Id'];
+			$s_personId=$stmt->fetch()['id'];
 		}
         
     }else{
