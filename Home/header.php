@@ -4,8 +4,8 @@
     <a href="index.php" class="logo">
       <!-- mini logo for sidebar mini 50x50 pixels -->
 	  <span class="logo-mini"><i class="fa fa-home"></i></span>
-      <!-- logo for regular state and mobile devices 
-      <span class="logo-lg"><b>ASKN</b> E-Evaluate</span>-->
+      <!-- logo for regular state and mobile devices -->
+      <span class="logo-lg"><b>ASKN</b> E-Evaluation</span>
     </a>
 
     <!-- Header Navbar -->
@@ -15,8 +15,8 @@
         <span class="sr-only">Toggle navigation</span>
 		
       </a>
-      <!-- Navbar tittle
-	  <label style="font-size: 20px; padding-top:10px; color: white;"> ระบบประเมินประสิทธิภาพการทำงาน <span style="font-size: 14px;">ASKN CO.,LTD.</span></label> -->
+      <!-- Navbar tittle-->
+	  <label style="font-size: 20px; padding-top:10px; color: white;"> ระบบประเมินประสิทธิภาพการทำงาน </label> 
 	  
 	  
       <!-- Navbar Right Menu -->

@@ -208,7 +208,38 @@
 					echo json_encode(array('success' => false, 'message' => $errors));
 				}
 				break;
+			case 'createData' :
+				//$id = $_POST['id'];
 				
+				$sql = "
+				INSERT INTO `eval_term_person`(`termId`, `personId`)
+				SELECT t.id, p.id 
+				FROM eval_term t 
+				LEFT JOIN eval_person p ON p.statusId=1 
+				WHERE t.isCurrent=1 
+				AND NOT EXISTS (SELECT * FROM eval_term_person x
+				                WHERE x.termId=t.id AND x.personId=p.id) 
+				";
+				$stmt = $pdo->prepare($sql);	
+				$stmt->execute();	
+
+				$sql = "
+				INSERT INTO eval_data (`termPersonId`, `topicGroupId`, `topicGroupName`, `topicGroupRatio`, `seqNo`, `topicId`, `topicName`, `topicDesc`)
+				SELECT tp.`id`, tg.id, tg.name, tg.ratio
+				,t.seqNo, t.id, t.name, t.nameDesc
+				FROM `eval_term_person` tp 
+				LEFT JOIN eval_topic_group tg ON 1=1 
+				INNER JOIN eval_topic t ON t.topicGroupId=tg.id AND t.positionGroupId=1 AND t.statusId=1 
+				WHERE tg.id IN (2,3,4)
+				AND NOT EXISTS (SELECT * FROM eval_data x WHERE x.termPersonId=tp.id)
+				";
+				$stmt = $pdo->prepare($sql);	
+				$stmt->execute();	
+				
+				header('Content-Type: application/json');
+				  echo json_encode(array('success' => true, 'message' => 'Data Updated Complete.'));
+				break;
+
 			default : 
 				header('Content-Type: application/json');
 				echo json_encode(array('success' => false, 'message' => 'Unknow action.'));				

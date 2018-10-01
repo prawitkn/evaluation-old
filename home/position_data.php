@@ -17,14 +17,17 @@
 
 	$id=( isset( $_GET['id'] ) ? $_GET['id'] : '' );
 	//query 
-	$sql = "SELECT `id`, `seqNo`, `code`, `name`, `statusId` FROM ".$tb." WHERE id=:id ";
+	$sql = "SELECT `id`, `positionRankId`, `sectionId`, `seqNo`, `code`, `name`, `statusId` FROM ".$tb." WHERE id=:id ";
     $stmt = $pdo->prepare($sql);	
     $stmt->bindParam(':id', $id);
 	$stmt->execute();	//echo $sql;
 	$row = $stmt->fetch();
+
+	$positionRankId=$row['positionRankId'];
+	$sectionId=$row['sectionId'];
 ?>	
 </head>
-<body class="hold-transition skin-yellow sidebar-mini sidebar-collapse">    
+<body class="hold-transition skin-yellow sidebar-mini ">    
 
 <div class="wrapper">
 
@@ -39,14 +42,14 @@
     <!-- Content Header (Page header) -->
    <section class="content-header">
 		<h1><i class="fa fa-th-list"></i>
-       ระดับตำแหน่ง
+       ตำแหน่ง
         <small>การจัดการข้อมูลหลัก</small>
       </h1>
 
 
       <ol class="breadcrumb">
        <li><a href="index.php"><i class="fa fa-home"></i>หน้าแรก</a></li>
-       <li><a href="<?=$rootPage;?>_list.php"><i class="fa fa-list"></i>รายการ ระดับตำแหน่ง</a></li>
+       <li><a href="<?=$rootPage;?>_list.php"><i class="fa fa-list"></i>รายการ ตำแหน่ง</a></li>
       </ol>
     </section>
    
@@ -57,9 +60,9 @@
     <div class="box box-primary">
         <div class="box-header with-border">
         <?php if ( $id=="" ) { ?>
-        	<h3 class="box-title">เพิ่ม ระดับตำแหน่ง</h3>
+        	<h3 class="box-title">เพิ่ม ตำแหน่ง</h3>
     	<?php }else{ ?>
-    		 <h3 class="box-title">แก้ไข ระดับตำแหน่ง <span style="color: blue;"><?php echo $id.' : '.$row['name']; ?></span></h3>
+    		 <h3 class="box-title">แก้ไข ตำแหน่ง <span style="color: blue;"><?php echo $id.' : '.$row['name']; ?></span></h3>
     	<?php } //.if id==0 ?>
 
 
@@ -76,43 +79,55 @@
     				<input type="hidden" name="id" value="<?=$id;?>" />
 
 				
-				<div class="row">					
-					<div class="col-md-3">					
-	                    <div class="form-group">
-	                        <label for="code">รหัส ระดับตำแหน่ง</label>
-	                        <input id="code" type="text" class="form-control" name="code" value="<?=$row['code'];?>" data-smk-msg="จำเป็น"required>
-	                    </div>
+				<div class="row">
+					<div class="col-md-2">
+						<div class="form-group">
+	                        <label for="positionRankId">ระดับ ตำแหน่ง</label>
+							<select id="positionRankId" name="positionRankId" class="form-control"  data-smk-msg="จำเป็น" required>
+								<?php
+								$sql = "SELECT `id`, `code`, `name`, `statusId`  FROM `eval_position_rank` WHERE StatusId=1 ";		
+								$stmt = $pdo->prepare($sql);		
+								$stmt->execute();
+								while($itm = $stmt->fetch()){
+									$selected=( $positionRankId==$itm['id'] ? ' selected ' : '' );
+									echo '<option value="'.$itm['id'].'" '.$selected.'
+										 >'.$itm['name'].'</option>';
+								}
+								?>
+							</select>
+	                    </div>	                    
 					</div>
-				
+					<!--/.col-md-->
+
+					<div class="col-md-2">
+						<div class="form-group">
+	                        <label for="sectionId">แผนก</label>
+							<select id="sectionId" name="sectionId" class="form-control"  data-smk-msg="จำเป็น" required>
+								<?php
+								$sql = "SELECT `id`, `code`, `name`, `statusId`  FROM `eval_section` WHERE StatusId=1 ";		
+								$stmt = $pdo->prepare($sql);		
+								$stmt->execute();
+								while($itm = $stmt->fetch()){
+									$selected=( $sectionId==$itm['id'] ? ' selected ' : '' );
+									echo '<option value="'.$itm['id'].'" '.$selected.'
+										 >'.$itm['name'].'</option>';
+								}
+								?>
+							</select>
+	                    </div>	                    
+					</div>
 					<!--/.col-md-->
 
 					<div class="col-md-6">
 						<div class="form-group">
-	                        <label for="name">ชื่อ ระดับตำแหน่ง</label>
+	                        <label for="name">ชื่อ ตำแหน่ง</label>
 	                        <input id="name" type="text" class="form-control" name="name" value="<?=$row['name'];?>" data-smk-msg="จำเป็น" required>
 	                    </div>	
 	                    
 					</div>
 					<!--/.col-md-->
 
-					<div class="col-md-2">
-						<div class="form-group">
-	                        <label for="positionRankId">ระดับ ตำแหน่ง</label>
-							<select id="positionRankId" name="positionRankId" class="form-control"  data-smk-msg="จำเป็น" required>
-								<?php
-								$sql = "SELECT `id`, `code`, `name`, `statusId`  FROM `eval_position_rank` WHERE statusId=1 ";		
-								$stmt = $pdo->prepare($sql);		
-								$stmt->execute();
-								while($row = $stmt->fetch()){
-									echo '<option value="'.$row['id'].'" 
-										 >'.$row['name'].'</option>';
-								}
-								?>
-							</select>
-	                    </div>	
-	                    
-					</div>
-					<!--/.col-md-->
+					
 
 
 

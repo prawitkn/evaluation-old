@@ -7,6 +7,10 @@
 			header('Location: index2.php');
 			break;
 			exit();
+		case 3 :
+			header('Location: evaluate_result.php');
+			break;
+			exit();
 		default : 
 			header('Location: index2.php');
 			break;

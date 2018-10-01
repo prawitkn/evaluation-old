@@ -12,7 +12,7 @@
 ?>
 
 </head>
-<body class="hold-transition skin-yellow sidebar-mini sidebar-collapse">    
+<body class="hold-transition skin-yellow sidebar-mini ">    
 
 <div class="wrapper">
 

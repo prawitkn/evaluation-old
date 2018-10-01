@@ -13,12 +13,12 @@
 
 <?php 
 
-	$rootPage = 'positionRank';
-	$tb = 'eval_position_rank';
+	$rootPage = 'grade';
+	$tb = 'eval_grade';
 
 ?>	
 </head>
-<body class="hold-transition skin-yellow sidebar-mini ">    
+<body class="hold-transition skin-yellow sidebar-mini">    
 
 <div class="wrapper">
 
@@ -33,14 +33,14 @@
     <!-- Content Header (Page header) -->
 	<section class="content-header">
 		<h1><i class="fa fa-th-list"></i>
-       ระดับตำแหน่ง
+       เกรด
         <small>การจัดการข้อมูลหลัก</small>
       </h1>
 
 
       <ol class="breadcrumb">
        <li><a href="index.php"><i class="fa fa-home"></i>หน้าแรก</a></li>
-       <!--<li><a href="<?=$rootPage;?>_list.php"><i class="fa fa-list"></i>รายการ ระดับตำแหน่ง</a></li>-->
+       <!--<li><a href="<?=$rootPage;?>_list.php"><i class="fa fa-list"></i>รายการ กลุ่มหัวข้อการประเมิน</a></li>-->
       </ol>
     </section>
 
@@ -50,10 +50,10 @@
 <!-- To allow only admin to access the content -->      
     <div class="box box-primary">
         <div class="box-header with-border">
-		<label class="box-title">รายการ ระดับตำแหน่ง</label>
+		<label class="box-title">รายการ เกรด</label>
 
 
-			<a href="<?=$rootPage;?>_data.php?id=" class="btn btn-primary"><i class="glyphicon glyphicon-plus"></i> เพิ่ม ระดับตำแหน่ง</a>
+			<a href="<?=$rootPage;?>_data.php?id=" class="btn btn-primary"><i class="glyphicon glyphicon-plus"></i> เพิ่ม เกรด</a>
 		
 		
         <div class="box-tools pull-right">
@@ -97,7 +97,7 @@
 				<form id="form1" action="<?=$rootPage;?>_list.php" method="get" class="form" novalidate>
 					<div class="col-md-6">
 						<div class="form-group">
-	                        <label for="search_word">บางส่วนของ ชื่อระดับตำแหน่ง เพื่อใช้ค้นหาข้อมูล</label>
+	                        <label for="search_word">บางส่วนของ เกรด เพื่อใช้ค้นหาข้อมูล</label>
 							<input id="search_word" type="text" class="form-control" name="search_word" data-smk-msg="Require userFullname."required>
 	                    </div>	
 	                    <!--form-group-->
@@ -119,7 +119,7 @@
 			<!--/.row-->
            <?php
 				$sql = "
-				SELECT hdr.`id`, hdr.`seqNo`, hdr.`code`, hdr.`name`, hdr.`statusId`
+				SELECT hdr.`id`, hdr.`seqNo`, hdr.`name`, hdr.`statusId`
 				, hdr.`createTime`, hdr.`createUserId`, hdr.`updateTime`, hdr.`updateUserId`
 				, uc.userFullname as createUserName 
 				, uu.userFullname as updateUserName 
@@ -144,9 +144,8 @@
             <table class="table table-striped">
                 <tr style="background-color: #ffcc99;">
 					<th>ลำดับ</th>
-					<th>ID</th>
-					<th>รหัส ระดับตำแหน่ง</th>
-					<th>ชื่อระดับตำแหน่ง</th>
+					<th>รหัส</th>
+					<th>ชื่อเกรด</th>
                     <th>สถานะ</th>
                     <th>#</th>
                 </tr>
@@ -160,9 +159,6 @@
                     </td>
 					 <td>
                          <?= $row['id']; ?>
-                    </td>
-                    <td>
-                         <?= $row['code']; ?>
                     </td>
                     <td>
                          <?= $row['name']; ?>

@@ -12,16 +12,8 @@
 ?>
 
 <?php 
-	$rootPage = 'topicGroup';
-	$tb = 'eval_topic_group';
-
-	$id=( isset( $_GET['id'] ) ? $_GET['id'] : '' );
-	//query 
-	$sql = "SELECT `id`, `seqNo`, `code`, `name`, `ratio`, `statusId` FROM ".$tb." WHERE id=:id ";
-    $stmt = $pdo->prepare($sql);	
-    $stmt->bindParam(':id', $id);
-	$stmt->execute();	//echo $sql;
-	$row = $stmt->fetch();
+	$rootPage = 'person';
+	$tb = 'eval_person';
 ?>	
 </head>
 <body class="hold-transition skin-yellow sidebar-mini ">    
@@ -34,32 +26,44 @@
   <!-- Left side column. contains the logo and sidebar -->
    <?php include 'leftside.php'; ?>
 
+   <?php    
+	$id=( isset( $_GET['id'] ) ? $_GET['id'] : '' );
+   	//query 
+	$sql = "SELECT `id`, `code`, `fullName`, `sectionId`, `seqNo`, `startDate`, `positionId`, `deptName`, `PositionName`, `statusId` FROM ".$tb." WHERE id=:id ";
+    $stmt = $pdo->prepare($sql);	
+    $stmt->bindParam(':id', $id);
+	$stmt->execute();	//echo $sql;
+	$row = $stmt->fetch();
+	$sectionId=$row['sectionId'];
+	$positionId=$row['positionId'];
+   ?>
+
   <!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
     <!-- Content Header (Page header) -->
    <section class="content-header">
 		<h1><i class="fa fa-th-list"></i>
-       กลุ่มหัวข้อการประเมิน
+       พนักงาน
         <small>การจัดการข้อมูลหลัก</small>
       </h1>
 
 
       <ol class="breadcrumb">
        <li><a href="index.php"><i class="fa fa-home"></i>หน้าแรก</a></li>
-       <li><a href="<?=$rootPage;?>_list.php"><i class="fa fa-list"></i>รายการ กลุ่มหัวข้อการประเมิน</a></li>
+       <li><a href="<?=$rootPage;?>_list.php"><i class="fa fa-list"></i>รายการ พนักงาน</a></li>
       </ol>
     </section>
    
-        <!-- Main content -->
+     <!-- Main content -->
     <section class="content">
 
       <!-- Your Page Content Here -->
     <div class="box box-primary">
         <div class="box-header with-border">
         <?php if ( $id=="" ) { ?>
-        	<h3 class="box-title">เพิ่ม หัวข้อการประเมิน</h3>
+        	<h3 class="box-title">เพิ่ม พนักงาน</h3>
     	<?php }else{ ?>
-    		 <h3 class="box-title">แก้ไข หัวข้อการประเมิน <span style="color: blue;"><?php echo $id.' : '.$row['name']; ?></span></h3>
+    		 <h3 class="box-title">แก้ไข พนักงาน <span style="color: blue;"><?php echo $id.' : '.$row['fullName']; ?></span></h3>
     	<?php } //.if id==0 ?>
 
 
@@ -76,32 +80,43 @@
     				<input type="hidden" name="id" value="<?=$id;?>" />
 
 				
-				<div class="row">
-					<!--
-					<div class="col-md-3">					
-	                    <div class="form-group">
-	                        <label for="code">Sale Delivery Type Code</label>
-	                        <input id="code" type="text" class="form-control" name="code" data-smk-msg="Require user group code."required>
-	                    </div>
+				<div class="row">					
+					<div class="col-md-3">
+						<div class="form-group">
+	                        <label for="sectionId">แผนก</label>
+							<select id="sectionId" name="sectionId" class="form-control"  data-smk-msg="จำเป็น" required>
+								<?php
+								$sql = "SELECT `id`, `code`, `name`, `statusId`  FROM `eval_section` WHERE StatusId=1 ";		
+								$stmt = $pdo->prepare($sql);		
+								$stmt->execute();
+								while($itm = $stmt->fetch()){
+									$selected=( $sectionId==$itm['id'] ? ' selected ' : '' );
+									echo '<option value="'.$itm['id'].'" '.$selected.'
+										 >'.$itm['name'].'</option>';
+								}
+								?>
+							</select>
+	                    </div>		                    
 					</div>
-				-->
 					<!--/.col-md-->
 
-					<div class="col-md-6">
+					<div class="col-md-3">
 						<div class="form-group">
-	                        <label for="name">ชื่อหัวข้อกลุ่มประเมิน</label>
-	                        <input id="name" type="text" class="form-control" name="name" value="<?=$row['name'];?>" data-smk-msg="จำเป็น" required>
-	                    </div>	
-	                    
-					</div>
-					<!--/.col-md-->
-
-					<div class="col-md-2">
-						<div class="form-group">
-	                        <label for="ratio">สัดส่วนคะแนน</label>
-	                        <input id="ratio" type="text" class="form-control" name="ratio" value="<?=$row['ratio'];?>" data-smk-msg="จำเป็น" required>
-	                    </div>	
-	                    
+	                        <label for="positionId">ตำแหน่ง</label>
+							<select id="positionId" name="positionId" class="form-control" >
+								<option value="">--ทั้งหมด--</option>
+								<?php
+								$sql = "SELECT `id`, `code`, `name`, `statusId`  FROM `eval_position` WHERE StatusId=1 ";		
+								$stmt = $pdo->prepare($sql);		
+								$stmt->execute();
+								while($itm = $stmt->fetch()){
+									$selected=( $positionId==$itm['id'] ? ' selected ' : '' );
+									echo '<option value="'.$itm['id'].'" '.$selected.'
+										 >'.$itm['name'].'</option>';
+								}
+								?>
+							</select>
+	                    </div>		                    
 					</div>
 					<!--/.col-md-->
 
@@ -114,8 +129,34 @@
 	                   <!--form-group-->	                    
 					</div>
 					<!--/.col-md-->
+
+				</div>
+				<!--row-->
+
+				<div class="row">
+					<div class="col-md-2">
+						<div class="form-group">
+	                        <label for="code">รหัสพนักงาน</label>
+
+							<input type="text" name="code" class="form-control"  data-smk-msg="จำเป็น" required value="<?=$row['code'];?>" /> 
+	                    </div>	
+	                    
+					</div>
+					<!--/.col-md-->
+
+					<div class="col-md-5">
+						<div class="form-group">
+	                        <label for="fullName">ชื่อ นามสกุล</label>
+
+							<input type="text" name="fullName" class="form-control"  data-smk-msg="จำเป็น" required value="<?=$row['fullName'];?>" /> 
+	                    </div>	
+	                    
+					</div>
+					<!--/.col-md-->
+					
 				</div>
 				<!--/.row-->	
+				
 
 				<div class="row col-md-12">
 					<button id="btnSubmit" type="submit" class="btn btn-default"><i class="fa fa-save"> บันทึก</i></button>

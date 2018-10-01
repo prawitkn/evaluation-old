@@ -2,7 +2,7 @@
   include ("session.php");
 	//Check user roll.
 	switch($s_userGroupCode){
-		case 1 :  
+		case 1 :  case 3 :
 			break;
 		default : 
 			header('Location: access_denied.php');
@@ -12,12 +12,12 @@
 ?>
 
 <?php 
-	$rootPage = 'topicGroup';
-	$tb = 'eval_topic_group';
+	$rootPage = 'grade';
+	$tb = 'eval_grade';
 
 	$id=( isset( $_GET['id'] ) ? $_GET['id'] : '' );
 	//query 
-	$sql = "SELECT `id`, `seqNo`, `code`, `name`, `ratio`, `statusId` FROM ".$tb." WHERE id=:id ";
+	$sql = "SELECT `id`, `seqNo`, `name`, `ratio`, `statusId` FROM ".$tb." WHERE id=:id ";
     $stmt = $pdo->prepare($sql);	
     $stmt->bindParam(':id', $id);
 	$stmt->execute();	//echo $sql;
@@ -39,14 +39,14 @@
     <!-- Content Header (Page header) -->
    <section class="content-header">
 		<h1><i class="fa fa-th-list"></i>
-       กลุ่มหัวข้อการประเมิน
+       เกรด
         <small>การจัดการข้อมูลหลัก</small>
       </h1>
 
 
       <ol class="breadcrumb">
        <li><a href="index.php"><i class="fa fa-home"></i>หน้าแรก</a></li>
-       <li><a href="<?=$rootPage;?>_list.php"><i class="fa fa-list"></i>รายการ กลุ่มหัวข้อการประเมิน</a></li>
+       <li><a href="<?=$rootPage;?>_list.php"><i class="fa fa-list"></i>รายการ เกรด</a></li>
       </ol>
     </section>
    
@@ -57,9 +57,9 @@
     <div class="box box-primary">
         <div class="box-header with-border">
         <?php if ( $id=="" ) { ?>
-        	<h3 class="box-title">เพิ่ม หัวข้อการประเมิน</h3>
+        	<h3 class="box-title">เพิ่ม เกรด</h3>
     	<?php }else{ ?>
-    		 <h3 class="box-title">แก้ไข หัวข้อการประเมิน <span style="color: blue;"><?php echo $id.' : '.$row['name']; ?></span></h3>
+    		 <h3 class="box-title">แก้ไข เกรด <span style="color: blue;"><?php echo $id.' : '.$row['name']; ?></span></h3>
     	<?php } //.if id==0 ?>
 
 
@@ -89,7 +89,7 @@
 
 					<div class="col-md-6">
 						<div class="form-group">
-	                        <label for="name">ชื่อหัวข้อกลุ่มประเมิน</label>
+	                        <label for="name">เกรด</label>
 	                        <input id="name" type="text" class="form-control" name="name" value="<?=$row['name'];?>" data-smk-msg="จำเป็น" required>
 	                    </div>	
 	                    
@@ -98,7 +98,7 @@
 
 					<div class="col-md-2">
 						<div class="form-group">
-	                        <label for="ratio">สัดส่วนคะแนน</label>
+	                        <label for="ratio">สัดส่วน</label>
 	                        <input id="ratio" type="text" class="form-control" name="ratio" value="<?=$row['ratio'];?>" data-smk-msg="จำเป็น" required>
 	                    </div>	
 	                    

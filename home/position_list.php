@@ -2,7 +2,7 @@
   include ("session.php");
 	//Check user roll.
 	switch($s_userGroupCode){
-		case 1 :  
+		case 1 : case 3 :  
 			break;
 		default : 
 			header('Location: access_denied.php');
@@ -17,9 +17,10 @@
 
 	$searchWord=( isset($_GET['searchWord']) ? $_GET['searchWord'] : '' );
 	$positionRankId=( isset($_GET['positionRankId']) ? $_GET['positionRankId'] : '' );
+	$sectionId=( isset($_GET['sectionId']) ? $_GET['sectionId'] : '' );
 ?>	
 </head>
-<body class="hold-transition skin-yellow sidebar-mini sidebar-collapse">    
+<body class="hold-transition skin-yellow sidebar-mini ">    
 
 <div class="wrapper">
 
@@ -65,17 +66,18 @@
                // $result_user = mysqli_query($link, $sql_user);
                // $count_user = mysqli_fetch_assoc($result_user);
 				
-				$searchWord="";
                 $sql = "
 				SELECT COUNT(*) AS countTotal 
 				FROM `".$tb."` hdr  
 				WHERE 1=1 ";
 				if($searchWord<>""){ $sql .= "AND hdr.name like :searchWord "; }
-				if($positionRankId<>""){ $sql .= "AND hdr.positionRankId like :positionRankId "; }
+				if($positionRankId<>""){ $sql .= "AND hdr.positionRankId = :positionRankId "; }
+				if($sectionId<>""){ $sql .= "AND hdr.sectionId = :sectionId "; }
 
                 $stmt = $pdo->prepare($sql);	
                 if($searchWord<>""){ $tmp='%'.$searchWord.'%'; $stmt->bindParam(':searchWord', $tmp); }
                 if($positionRankId<>""){ $stmt->bindParam(':positionRankId', $positionRankId); }
+                if($sectionId<>""){ $stmt->bindParam(':sectionId', $sectionId); }
 				$stmt->execute();	//echo $sql;
 				$countTotal = $stmt->fetch()['countTotal'];
 				
@@ -115,7 +117,27 @@
 					</div>
 					<!--/.col-md-->
 
-					<div class="col-md-6">
+					<div class="col-md-2">
+						<div class="form-group">
+	                        <label for="sectionId">แผนก</label>
+							<select id="sectionId" name="sectionId" class="form-control"  data-smk-msg="จำเป็น" required>
+								<option value="">--เลือก--</option>
+								<?php
+								$sql = "SELECT `id`, `code`, `name`, `statusId`  FROM `eval_section` WHERE StatusId=1 ";		
+								$stmt = $pdo->prepare($sql);		
+								$stmt->execute();
+								while($itm = $stmt->fetch()){
+									$selected=( $sectionId==$itm['id'] ? ' selected ' : '' );
+									echo '<option value="'.$itm['id'].'" '.$selected.'
+										 >'.$itm['name'].'</option>';
+								}
+								?>
+							</select>
+	                    </div>		                    
+					</div>
+					<!--/.col-md-->
+
+					<div class="col-md-3">
 						<div class="form-group">
 	                        <label for="search_word">บางส่วนของ ชื่อระดับตำแหน่ง เพื่อใช้ค้นหาข้อมูล</label>
 							<input id="search_word" type="text" class="form-control" name="search_word" data-smk-msg="Require userFullname."required>
@@ -140,15 +162,19 @@
            <?php
 				$sql = "
 				SELECT hdr.`id`, hdr.`seqNo`, hdr.`code`, hdr.`name`, hdr.`statusId`
+				, hdr.`sectionId`, sec.`name` as sectionName 
+
 				, hdr.`createTime`, hdr.`createUserId`, hdr.`updateTime`, hdr.`updateUserId`
 				, uc.userFullname as createUserName 
 				, uu.userFullname as updateUserName 
 				FROM `".$tb."` hdr 
+				INNER JOIN eval_section sec ON sec.id=hdr.sectionId 
 				LEFT JOIN `eval_user` uc on uc.userId=hdr.createUserId 
 				LEFT JOIN `eval_user` uu on uu.userId=hdr.updateUserId 
 				WHERE 1=1 ";
 				if($searchWord<>""){ $sql .= "AND hdr.name like :searchWord "; }	
-				if($positionRankId<>""){ $sql .= "AND hdr.positionRankId like :positionRankId "; }
+				if($positionRankId<>""){ $sql .= "AND hdr.positionRankId = :positionRankId "; }				
+				if($sectionId<>""){ $sql .= "AND hdr.sectionId = :sectionId "; }
 
                 $stmt = $pdo->prepare($sql);
 				$sql .= "ORDER BY hdr.seqNo ASC
@@ -157,17 +183,18 @@
 				$stmt = $pdo->prepare($sql);						
                 if($searchWord<>""){ $tmp='%'.$searchWord.'%'; $stmt->bindParam(':searchWord', $tmp); }
                 if($positionRankId<>""){ $stmt->bindParam(':positionRankId', $positionRankId); }
+                if($sectionId<>""){ $stmt->bindParam(':sectionId', $sectionId); }
 				$stmt->execute();	//echo $sql;
               
            ?> 
             <form id="form2" class="form">
             	<input type="hidden" name="action" value="tableSubmit" />
             <table class="table table-striped">
-                <tr>
+                <tr style="background-color: #ffcc99;">
 					<th>ลำดับ</th>
 					<th>ID</th>
-					<th>รหัส ระดับตำแหน่ง</th>
-					<th>ชื่อระดับตำแหน่ง</th>
+					<th>แผนก</th>
+					<th>ชื่อตำแหน่ง</th>
                     <th>สถานะ</th>
                     <th>#</th>
                 </tr>
@@ -183,7 +210,7 @@
                          <?= $row['id']; ?>
                     </td>
                     <td>
-                         <?= $row['code']; ?>
+                         <?= $row['sectionName']; ?>
                     </td>
                     <td>
                          <?= $row['name']; ?>

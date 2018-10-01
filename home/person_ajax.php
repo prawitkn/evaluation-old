@@ -1,8 +1,8 @@
-,<?php
+<?php
     include 'session.php';	
 		
-$rootPage = 'topicGroup';
-$tb = 'eval_topic_group';
+	$rootPage = 'person';
+	$tb = 'eval_person';
 	
 	if(!isset($_POST['action'])){		
 		header('Content-Type: application/json');
@@ -12,15 +12,22 @@ $tb = 'eval_topic_group';
 			case 'save' :				
 				try{
 				$id = $_POST['id'];
-				$name = $_POST['name'];
-				$ratio = $_POST['ratio'];
+				$code = $_POST['code'];
+				$sectionId = $_POST['sectionId'];
+				$positionId = $_POST['positionId'];
+				$fullName = $_POST['fullName'];
+
+				$sectionId=($sectionId<>""?$sectionId:'0');
+				$positionId=($positionId<>""?$positionId:'0');			
 				
 				if ( $id == "" ){
 					//Insert				
 					// Check duplication?
-					$sql = "SELECT id FROM `".$tb."` WHERE name=:name ";
+					$sql = "SELECT id FROM `".$tb."` WHERE (code=:code
+					 OR fullName=:fullName) ";
 					$stmt = $pdo->prepare($sql);	 
-					$stmt->bindParam(':name', $name);
+					$stmt->bindParam(':code', $code);
+					$stmt->bindParam(':fullName', $fullName);
 					$stmt->execute();
 					if ($stmt->rowCount() >= 1){
 					  header('Content-Type: application/json');
@@ -29,11 +36,13 @@ $tb = 'eval_topic_group';
 					  exit;    
 					}   
 		
-					$sql = "INSERT INTO `".$tb."` (`name`, `ratio`, `statusId`, `createTime`, `createUserId`)
-					 VALUES (:name,:ratio,1,NOW(),:createUserId) ";
+					$sql = "INSERT INTO `".$tb."` (`code`, `fullName`, `sectionId`, `positionId`, `statusId`, `createTime`, `createUserId`)
+					 VALUES (:code, :fullName, :sectionId, :positionId, 1,NOW(),:createUserId) ";
 					$stmt = $pdo->prepare($sql);	
-					$stmt->bindParam(':name', $name);
-					$stmt->bindParam(':ratio', $ratio);
+					$stmt->bindParam(':code', $code);
+					$stmt->bindParam(':fullName', $fullName);
+					$stmt->bindParam(':sectionId', $sectionId);
+					$stmt->bindParam(':positionId', $positionId);
 					$stmt->bindParam(':createUserId', $s_userId);
 					if ($stmt->execute()) {
 						header('Content-Type: application/json');
@@ -46,14 +55,21 @@ $tb = 'eval_topic_group';
 				}else{
 					//Update
 					$id = $_POST['id'];
-					$name = $_POST['name'];
-					$ratio = $_POST['ratio'];
+					$sectionId = $_POST['sectionId'];
+					$positionId = $_POST['positionId'];
+					$fullName = $_POST['fullName'];
 					$statusId = $_POST['statusId'];
+
+					$sectionId=($sectionId<>""?$sectionId:'0');
+					$positionId=($positionId<>""?$positionId:'0');			
 					
 					// Check user name duplication?
-					$sql = "SELECT id FROM `".$tb."` WHERE (name=:name) AND id<>:id ";
-					$stmt = $pdo->prepare($sql);	
-					$stmt->bindParam(':name', $name);
+					$sql = "SELECT id FROM `".$tb."`WHERE (code=:code
+					 AND fullName=:fullName)
+					 AND id<>:id ";
+					$stmt = $pdo->prepare($sql);	 
+					$stmt->bindParam(':code', $code);
+					$stmt->bindParam(':fullName', $fullName);
 					$stmt->bindParam(':id', $id);
 					$stmt->execute();
 					if ($stmt->rowCount() >= 1){
@@ -64,20 +80,24 @@ $tb = 'eval_topic_group';
 					} 	   
 					
 					//Sql
-					$sql = "UPDATE `".$tb."` SET `ratio`=:ratio 
-					, `name`=:name
+					$sql = "UPDATE `".$tb."` SET  `code`=:code 
+					, `sectionId`=:sectionId 
+					, `positionId`=:positionId
+					, `fullName`=:fullName
 					, `statusId`=:statusId
 					, `updateTime`=NOW()
 					, `updateUserId`=:updateUserId
 					WHERE id=:id 
 					";	
 					$stmt = $pdo->prepare($sql);	
-					$stmt->bindParam(':ratio', $ratio);
-					$stmt->bindParam(':name', $name);
+					$stmt->bindParam(':code', $code);
+					$stmt->bindParam(':sectionId', $sectionId);
+					$stmt->bindParam(':positionId', $positionId);
+					$stmt->bindParam(':fullName', $fullName);
 					$stmt->bindParam(':statusId', $statusId);
 					$stmt->bindParam(':updateUserId', $s_userId);
 					$stmt->bindParam(':id', $id);
-					if ($stmt->execute()) {
+					if ($stmt->execute()) { 
 						  header('Content-Type: application/json');
 						  echo json_encode(array('status' => 'success', 'message' => 'Data Updated Complete.'));
 					   } else {
@@ -94,46 +114,6 @@ $tb = 'eval_topic_group';
 				} // catch			
 				break;
 				exit();
-			case 'edit' :
-				$id = $_POST['id'];
-				$code = $_POST['code'];
-				$name = $_POST['name'];
-				$statusId = $_POST['statusId'];
-				
-				// Check user name duplication?
-				$sql = "SELECT id FROM `".$tb."` WHERE (code=:code OR name=:name) AND id<>:id ";
-				$stmt = $pdo->prepare($sql);	
-				$stmt->bindParam(':code', $code);
-				$stmt->bindParam(':name', $name);
-				$stmt->bindParam(':id', $id);
-				$stmt->execute();
-				if ($stmt->rowCount() >= 1){
-				  header('Content-Type: application/json');
-				  $errors = "Error on Data Insertion. Duplicate data.";
-				  echo json_encode(array('success' => false, 'message' => $errors));  
-				  exit;    
-				} 	   
-				
-				//Sql
-				$sql = "UPDATE `".$tb."` SET `code`=:code 
-				, `name`=:name
-				, `statusId`=:statusId
-				WHERE id=:id 
-				";	
-				$stmt = $pdo->prepare($sql);	
-				$stmt->bindParam(':code', $code);
-				$stmt->bindParam(':name', $name);
-				$stmt->bindParam(':statusId', $statusId);
-				$stmt->bindParam(':id', $id);
-				if ($stmt->execute()) {
-					  header('Content-Type: application/json');
-					  echo json_encode(array('success' => true, 'message' => 'Data Updated Complete.'));
-				   } else {
-					  header('Content-Type: application/json');
-					  $errors = "Error on Data Update. Please try new data. " . $pdo->errorInfo();
-					  echo json_encode(array('success' => false, 'message' => $errors));
-				}	
-				break;
 			case 'setActive' :
 				$id = $_POST['id'];
 				$statusId = $_POST['statusId'];	

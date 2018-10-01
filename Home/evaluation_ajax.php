@@ -413,6 +413,7 @@
 							$stmt->execute();	
 							$SeqNo+=1;		
 						}
+						
 					}
 					$pdo->commit();
 					

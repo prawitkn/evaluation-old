@@ -9,7 +9,7 @@ $rootPage = 'evaluation';
 
 //Check user roll.
 switch($s_userGroupCode){
-	case 1 : case 3 :
+	case 3 :
 		break;
 	default : 
 		header('Location: access_denied.php');

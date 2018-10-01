@@ -2,7 +2,7 @@
   include ("session.php");
 	//Check user roll.
 	switch($s_userGroupCode){
-		case 1 :  
+		case 1 : case 3 :   
 			break;
 		default : 
 			header('Location: access_denied.php');
@@ -20,7 +20,7 @@
 
 ?>	
 </head>
-<body class="hold-transition skin-yellow sidebar-mini sidebar-collapse">    
+<body class="hold-transition skin-yellow sidebar-mini ">    
 
 <div class="wrapper">
 
@@ -139,7 +139,7 @@
             <form id="form2" class="form">
             	<input type="hidden" name="action" value="tableSubmit" />
             <table class="table table-striped">
-                <tr>
+                <tr style="background-color: #ffcc99;">
 					<th>ID</th>
 					<th>ลำดับ</th>
 					<th>ชื่อแผนก</th>

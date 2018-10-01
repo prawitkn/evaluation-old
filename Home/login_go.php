@@ -1,6 +1,5 @@
-<?php
-include_once 'ConfigApp.php'; 
-include '../Private/db/db.php';
+<?php 
+include '../sys/db/db.php';
 
 $userName = $_POST['userName'];
 $userPassword = $_POST['userPassword'];

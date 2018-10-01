@@ -66,14 +66,36 @@
    	//$userEvaluatorPersonId=$_GET['epId'];
    	$arrItmId = array();
 
-	$sql = "SELECT `id`, `code`, `fullName`, `sectionId`, `startDate`, `deptName`, `PositionName`, `CreateTime`, `CreateUserId`, `UpdateTim`, `UpdateUserId`
-	FROM `eval_person` 
-	WHERE id=:id 
-	";
-	$stmt = $pdo->prepare($sql);
-	$stmt->bindParam(':id', $personId);
-	$stmt->execute();
-	$row = $stmt->fetch();	
+ $sql = "SELECT tp.id as termPersonId, CONCAT(t.term,'/',t.year) as termName, p.fullName as personFullName, p.positionId
+	 	,tp.evaluatorPersonId, tp.EvaluatorPersonId2, tp.evaluatorPersonId3
+	 	,tp.score, tp.evaluatorTotal 
+		  , pos.name as positionName, pos.positionRankId, pos.sectionId 
+		  , sec.name as sectionName 
+		  , res.statusId 
+		  FROM eval_term_person tp
+		  INNER JOIN eval_term t ON t.id=tp.termId 
+		  INNER JOIN eval_person p ON p.id=tp.personId 
+		  LEFT JOIN eval_position pos ON pos.id=p.positionId 
+		  LEFT JOIN eval_section sec ON sec.id=pos.sectionId
+		  LEFT JOIN eval_result res ON res.termPersonId=tp.id AND
+		  	( res.EvaluatorPersonId=tp.personId OR  
+		  	res.evaluatorPersonId=tp.evaluatorPersonId OR 
+		  	res.evaluatorPersonId=tp.evaluatorPersonId2 OR 
+		  	res.evaluatorPersonId=tp.evaluatorPersonId3 )			  	
+		  WHERE 1=1
+		  AND tp.id=:id 
+		  ";
+
+		    $stmt = $pdo->prepare($sql);        
+		  $stmt->bindParam(':id', $termPersonId);
+		  $stmt->execute(); 
+		  $row=$stmt->fetch();
+
+		  $termPersonId=$row['termPersonId'];			
+		  $evaluatorPersonId=$row['evaluatorPersonId'];
+		  $evaluatorPersonId2=$row['evaluatorPersonId2'];
+		  $evaluatorPersonId3=$row['evaluatorPersonId3'];
+		  $statusId=$row['statusId'];
 
    ?>
 
@@ -100,7 +122,7 @@
 
         	</label>
 
-        	<label style="font-size: 22px; color: blue;" id="evaluateFullName"><?=$row['fullName'];?></label>
+        	<label style="font-size: 22px; color: blue;" id="evaluateFullName"><?=$row['personFullName'];?></label> / <?=$row['positionName'];?>
 
 			<!--<a href="<?=$rootPage;?>_add.php?id=" class="btn btn-primary"><i class="fa fa-plus"></i> Add user group</a>-->
 		
@@ -166,16 +188,16 @@
     	<input type="hidden" name="action" value="evalSubmit" />
 			<input type="hidden" name="termPersonId" value="<?=$termPersonId;?>" />
 
-      <table class="table table-striped"><?=$termPersonId;?>
+      <table class="table table-striped">
 			<tr>
 				<th>ลำดับ</th>
 				<th>หัวข้อการประเมิน</th>
-				<th>ระดับ 1</th>	
-				<th>ระดับ 2</th>
-				<th>ระดับ 3</th>
-				<th>ระดับ 4</th>
-				<th>ระดับ 5</th>	
-				<th>คะแนนที่ได้ 0 - 100</th>	
+				<th style="width: 80px;">ระดับ 1</th>	
+				<th style="width: 80px;">ระดับ 2</th>
+				<th style="width: 80px;">ระดับ 3</th>
+				<th style="width: 80px;">ระดับ 4</th>
+				<th style="width: 80px;">ระดับ 5</th>	
+				<th style="width: 100px;">คะแนนที่ได้ 0 - 100</th>	
 			</tr>		
 			<?php 
 			$arrItmId = array();
@@ -195,29 +217,15 @@
 			$rowNo=1; while ($row = $stmt->fetch() ) { 			
 			?>
 			<tr>
+				<td><?= $rowNo; ?></td>	
+				<td><?= $row['topicName']; ?></td>				
+				<td>0 - 60</td>			
+				<td>61 - 70</td>			
+				<td>71 - 80</td>			
+				<td>81 - 90</td>			
+				<td>90 - 100</td>				
 				<td>
-					 <?= $rowNo; ?>
-				</td>	
-				<td>
-					 <?= $row['topicName']; ?>
-				</td>				
-				<td>
-					 0 - 60
-				</td>			
-				<td>
-					 61 - 70
-				</td>			
-				<td>
-					 71 - 80
-				</td>			
-				<td>
-					 81 - 90
-				</td>			
-				<td>
-					 90 - 100
-				</td>						
-				<td>
-					 <input type="text" name="<?=$row['id'];?>" class="form-control" value="<?=$row['score'];?>" data-skm-msg="จำเป็น" required />
+					 <input type="text" name="<?=$row['id'];?>" class="form-control" style="width: 80px; text-align: right;" value="<?=$row['score'];?>" data-skm-msg="จำเป็น" required />
 				</td>
 			</tr>
 			<?php 
@@ -245,12 +253,12 @@
 			<tr>
 				<th>ลำดับ</th>
 				<th>หัวข้อการประเมิน</th>
-				<th>ระดับ 1</th>	
-				<th>ระดับ 2</th>
-				<th>ระดับ 3</th>
-				<th>ระดับ 4</th>
-				<th>ระดับ 5</th>	
-				<th>คะแนนที่ได้ 0 - 100</th>	
+				<th style="width: 80px;">ระดับ 1</th>	
+				<th style="width: 80px;">ระดับ 2</th>
+				<th style="width: 80px;">ระดับ 3</th>
+				<th style="width: 80px;">ระดับ 4</th>
+				<th style="width: 80px;">ระดับ 5</th>	
+				<th style="width: 80px; text-align: right;">คะแนนที่ได้ 0 - 100</th>	
 			</tr>		
 			<?php 
 			$arrItmId = array();
@@ -270,29 +278,15 @@
 			$rowNo=1; while ($row = $stmt->fetch() ) { 			
 			?>
 			<tr>
+				<td><?= $rowNo; ?></td>	
+				<td><?= $row['topicName']; ?></td>				
+				<td>0 - 60</td>			
+				<td>61 - 70</td>			
+				<td>71 - 80</td>			
+				<td>81 - 90</td>			
+				<td>90 - 100</td>						
 				<td>
-					 <?= $rowNo; ?>
-				</td>	
-				<td>
-					 <?= $row['topicName']; ?>
-				</td>				
-				<td>
-					 0 - 60
-				</td>			
-				<td>
-					 61 - 70
-				</td>			
-				<td>
-					 71 - 80
-				</td>			
-				<td>
-					 81 - 90
-				</td>			
-				<td>
-					 90 - 100
-				</td>						
-				<td>
-					 <input type="text" name="<?=$row['id'];?>" class="form-control" value="<?=$row['score'];?>" data-skm-msg="จำเป็น" required />
+					 <input type="text" name="<?=$row['id'];?>" class="form-control" style="width: 80px; text-align: right;" value="<?=$row['score'];?>" data-skm-msg="จำเป็น" required />
 				</td>
 			</tr>
 			<?php 
@@ -319,12 +313,12 @@
 			<tr>
 				<th>ลำดับ</th>
 				<th>หัวข้อการประเมิน</th>
-				<th>ระดับ 1</th>	
-				<th>ระดับ 2</th>
-				<th>ระดับ 3</th>
-				<th>ระดับ 4</th>
-				<th>ระดับ 5</th>	
-				<th>คะแนนที่ได้ 0 - 100</th>	
+				<th style="width: 80px;">ระดับ 1</th>	
+				<th style="width: 80px;">ระดับ 2</th>
+				<th style="width: 80px;">ระดับ 3</th>
+				<th style="width: 80px;">ระดับ 4</th>
+				<th style="width: 80px;">ระดับ 5</th>	
+				<th style="width: 80px;">คะแนนที่ได้ 0 - 100</th>	
 			</tr>		
 			<?php 
 			$arrItmId = array();
@@ -344,29 +338,15 @@
 			$rowNo=1; while ($row = $stmt->fetch() ) { 			
 			?>
 			<tr>
+				<td><?= $rowNo; ?></td>	
+				<td><?= $row['topicName']; ?></td>				
+				<td>0 - 60</td>			
+				<td>61 - 70</td>			
+				<td>71 - 80</td>			
+				<td>81 - 90</td>			
+				<td>90 - 100</td>				
 				<td>
-					 <?= $rowNo; ?>
-				</td>	
-				<td>
-					 <?= $row['topicName']; ?>
-				</td>				
-				<td>
-					 0 - 60
-				</td>			
-				<td>
-					 61 - 70
-				</td>			
-				<td>
-					 71 - 80
-				</td>			
-				<td>
-					 81 - 90
-				</td>			
-				<td>
-					 90 - 100
-				</td>						
-				<td>
-					 <input type="text" name="<?=$row['id'];?>" class="form-control" value="<?=$row['score'];?>" data-skm-msg="จำเป็น" required />
+					 <input type="text" name="<?=$row['id'];?>" class="form-control" style="width: 80px; text-align: right;" value="<?=$row['score'];?>" data-skm-msg="จำเป็น" required />
 				</td>
 			</tr>
 			<?php 
@@ -393,11 +373,11 @@
 			<tr>
 				<th>ลำดับ</th>
 				<th>หัวข้อการประเมิน</th>
-				<th>ระดับ 1</th>	
-				<th>ระดับ 2</th>
-				<th>ระดับ 3</th>
-				<th>ระดับ 4</th>
-				<th>ระดับ 5</th>	
+				<th style="width: 80px;">ระดับ 1</th>	
+				<th style="width: 80px;">ระดับ 2</th>
+				<th style="width: 80px;">ระดับ 3</th>
+				<th style="width: 80px;">ระดับ 4</th>
+				<th style="width: 80px;">ระดับ 5</th>	
 				<th>คะแนนที่ได้ 0 - 100</th>	
 			</tr>		
 			<?php 
@@ -418,29 +398,15 @@
 			$rowNo=1; while ($row = $stmt->fetch() ) { 			
 			?>
 			<tr>
+				<td><?= $rowNo; ?></td>	
+				<td><?= $row['topicName']; ?></td>				
+				<td>0 - 60</td>			
+				<td>61 - 70</td>			
+				<td>71 - 80</td>			
+				<td>81 - 90</td>			
+				<td>90 - 100</td>				
 				<td>
-					 <?= $rowNo; ?>
-				</td>	
-				<td>
-					 <?= $row['topicName']; ?>
-				</td>				
-				<td>
-					 0 - 60
-				</td>			
-				<td>
-					 61 - 70
-				</td>			
-				<td>
-					 71 - 80
-				</td>			
-				<td>
-					 81 - 90
-				</td>			
-				<td>
-					 90 - 100
-				</td>						
-				<td>
-					 <input type="text" name="<?=$row['id'];?>" class="form-control" value="<?=$row['score'];?>" data-skm-msg="จำเป็น" required />
+					 <input type="text" name="<?=$row['id'];?>" class="form-control" style="width: 80px; text-align: right;" value="<?=$row['score'];?>" data-skm-msg="จำเป็น" required />
 				</td>
 			</tr>
 			<?php 
@@ -536,6 +502,8 @@ $(document).ready(function() {
 						type: data.success,
 						position:'top-center'
 					});
+					//next tab pills
+					$('.nav-pills a[href="#menu2"]').tab('show');
 					//location.reload();
 				} else {
 					alert(data.message);
@@ -571,6 +539,8 @@ $(document).ready(function() {
 						type: data.success,
 						position:'top-center'
 					});
+					//next tab pills
+					$('.nav-pills a[href="#menu3"]').tab('show');
 					//location.reload();
 				} else {
 					alert(data.message);
@@ -606,6 +576,8 @@ $(document).ready(function() {
 						type: data.success,
 						position:'top-center'
 					});
+					//next tab pills
+					$('.nav-pills a[href="#menu4"]').tab('show');
 					//location.reload();
 				} else {
 					alert(data.message);
@@ -641,6 +613,8 @@ $(document).ready(function() {
 						type: data.success,
 						position:'top-center'
 					});
+					//next tab pills
+					$('.nav-pills a[href="#menu5"]').tab('show');
 					//location.reload();
 				} else {
 					alert(data.message);
@@ -676,6 +650,7 @@ $(document).ready(function() {
 						type: data.success,
 						position:'top-center'
 					});
+					location.href = "<?=$rootPage;?>_view.php?tpId="+data.id;
 					//location.reload();
 				} else {
 					alert(data.message);

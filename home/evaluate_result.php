@@ -2,7 +2,7 @@
   include ("session.php");
 	//Check user roll.
 	switch($s_userGroupCode){
-		case 1 :  
+		case 3 :  
 			break;
 		default : 
 			header('Location: access_denied.php');
@@ -30,6 +30,7 @@
    <?php include 'leftside.php'; ?>
 
    <?php
+   		$positionRankId=( isset($_GET['positionRankId']) ? $_GET['positionRankId'] : '' );
    		$sectionId=( isset($_GET['sectionId']) ? $_GET['sectionId'] : '' );
 
    ?>
@@ -50,7 +51,7 @@
     <!-- Main content -->
     <section class="content">
 
-<!-- To allow only admin to access the content -->      
+	<!-- To allow only admin to access the content -->      
     <div class="box box-primary">
         <div class="box-header with-border">
         	<label class="box-tittle" style="font-size: 20px;"><i class="fa fa-list"></i> รายการผลการประเมิน</label>
@@ -65,10 +66,18 @@
                 $sql = "
 				SELECT COUNT(*) AS countTotal 
 				FROM eval_term_person hdr
-				INNER JOIN eval_person ps ON ps.Id=hdr.personId ";
-				if($sectionId<>""){ $sql .= "AND hdr.sectionId=:sectionId "; }
+				INNER JOIN eval_person ps ON ps.id=hdr.personId 
+				INNER JOIN eval_position pos ON pos.id=ps.positionId
+				INNER JOIN eval_section sec ON sec.id=pos.sectionId
+				LEFT JOIN eval_grade_rank gr ON gr.id=hdr.gradeRankId 
+				WHERE 1=1 ";
+				if($positionRankId<>""){ $sql .= "AND pos.positionRankId=:positionRankId "; }
+				if($sectionId<>""){ $sql .= "AND pos.sectionId=:sectionId "; }
 
+				$sql .= "AND hdr.termId=(SELECT id FROM eval_term WHERE isCurrent=1) ";
+				//echo $sql;
                 $stmt = $pdo->prepare($sql);	
+                if($positionRankId<>""){ $stmt->bindParam(':positionRankId', $positionRankId); }
                 if($sectionId<>""){ $stmt->bindParam(':sectionId', $sectionId); }
 				$stmt->execute();	
 				$countTotal = $stmt->fetch()['countTotal'];			
@@ -87,58 +96,101 @@
         </div><!-- /.box-tools -->
         </div><!-- /.box-header -->
         <div class="box-body">
-				<form id="form1" action="<?=$rootPage;?>.php" method="get" class="form form-inline" novalidate>
+			<div class="row col-md-12">				
+				<form id="form1" action="<?=$rootPage;?>.php" method="get" class="form" novalidate>
+
+				<div class="col-md-3">					
+					<label for="positionRankId">ระดับ ตำแหน่ง </label>
+					<select name="positionRankId" id="positionRankId" class="form form-control">
+						<option value="">--ทั้งหมด--</option>
+						<?php
+							$sql = "SELECT `id`, `seqNo`, `name` FROM eval_position_rank ORDER BY seqNo, id ";
+							$stmt = $pdo->prepare($sql);
+							$stmt->execute();	
+							While ( $itm = $stmt->fetch() ){
+								$selected=($positionRankId==$itm['id']?' selected ':'');
+								echo '<option value="'.$itm['id'].'" '.$selected.' >'.$itm['name'].'</option>';
+							}
+						?>
+					</select>
+				</div>  
+				<!--/.col-md-->
+
+
+				<div class="col-md-3">					
+					<label for="sectionId">แผนก </label>
+					<select name="sectionId" id="sectionId" class="form form-control">
+						<option value="">--ทั้งหมด--</option>
+						<?php
+							$sql = "SELECT `id`, `seqNo`, `code`, `name` FROM eval_section ORDER BY seqNo, id ";
+							$stmt = $pdo->prepare($sql);
+							$stmt->execute();	
+							While ( $itm = $stmt->fetch() ){
+								$selected=($sectionId==$itm['id']?' selected ':'');
+								echo '<option value="'.$itm['id'].'" '.$selected.' >'.$itm['name'].'</option>';
+							}
+						?>
+					</select>
+				</div>  
+				<!--/.col-md-->
+
 				
-					<div class="row">
-							<div class="col-md-3">					
-								<label for="sectionId">แผนก </label>
-								<select name="sectionId" class="form form-control">
-									<?php
-										$sql = "SELECT `id`, `seqNo`, `code`, `name` FROM eval_section ORDER BY seqNo, id ";
-										$stmt = $pdo->prepare($sql);
-										$stmt->execute();	
-										While ( $itm = $stmt->fetch() ){
-											$selected=($sectionId==$itm['id']?' selected ':'');
-											echo '<option value="'.$itm['id'].'" '.$selected.' >'.$itm['name'].'</option>';
-										}
-									?>
-								</select>
-								
-								
-							</div>  
-							<!--/.col-md-->
-							
-							<div class="col-md-1">
-								<label for="submit">&nbsp;</label>
-								<input type="submit" name="submit" class="btn btn-default" value="ค้นหา">
-							</div>  
-							<!--/.col-md-->
-					</div>
-					<!--/.row-->
-			
-			
+
+				<div class="col-md-1">
+					<div class="form-group">
+                        <label for="submit">&nbsp;</label>
+						<input type="submit" name="submit" class="form-control btn btn-default" value="ค้นหา" />
+                    </div>	
+                    <!--form-group-->
+				</div>
+				<!--/.col-md-->
+
+				<div class="col-md-1">
+					<div class="form-group">
+                        <label for="submit">&nbsp;</label>
+						<a href="#" name="btnAutoGrading" class="btn btn-primary" ><i class="fa fa-cut"></i> ตัดเกรด</a>
+                    </div>	
+                    <!--form-group-->
+				</div>
+				<!--/.col-md-->
+
+				
 				</form>
-				<!--/.form1-->	
+			</div>
+			<!--/.row-->
 			
            <?php
-				$sql = "
-				SELECT hdr.`Id`, hdr.`termId`, hdr.`personId`
+           		$sql = "
+				SELECT hdr.`id`, hdr.`termId`, hdr.`personId`
 				, hdr.`evaluatorPersonId`, hdr.`evaluatorPersonId2`, hdr.`evaluatorPersonId3`
-				, ps.Fullname, ps.DeptName, ps.PositionName 
+				, hdr.`score`, hdr.`evaluatorTotal`, hdr.`gradeRankId`, hdr.`gradeId`, hdr.`statusId`
+				, ps.code, ps.fullName,  ps.positionId
+				, pos.name as positionName, pos.sectionId
+				, sec.name as sectionName 
+				, gr.name as gradeRankName 
 				FROM eval_term_person hdr
 				INNER JOIN eval_person ps ON ps.Id=hdr.personId 
-				WHERE 1=1 ";
+				INNER JOIN eval_position pos ON pos.id=ps.positionId
+				INNER JOIN eval_section sec ON sec.id=pos.sectionId
+				LEFT JOIN eval_grade_rank gr ON gr.id=hdr.gradeRankId
+				WHERE 1=1 
+				";
+				$sql .= "AND hdr.termId=(SELECT id FROM eval_term WHERE isCurrent=1) ";
 				if(isset($_GET['search_word']) and isset($_GET['search_word'])){
 					$search_word=$_GET['search_word'];
 					$sql .= "and (hdr.userFullname like '%".$_GET['search_word']."%' ) ";
 				}	
-				$sql .= "ORDER BY hdr.id ASC
-						LIMIT $start, $rows 
-				";		
-                //$result = mysqli_query($link, $sql);
-				$stmt = $pdo->prepare($sql);	
-				$stmt->execute();	
-                
+				if( $positionRankId<>"" ){ $sql .= "AND pos.positionRankId=:positionRankId "; }
+				if( $sectionId <> "" ) { $sql .= "AND pos.sectionId=:sectionId "; }
+
+
+				$sql .= "ORDER BY hdr.score DESC ";
+				$sql .= "LIMIT $start, $rows ";		
+                //echo $sql;
+				$stmt = $pdo->prepare($sql);
+				if( $positionRankId <> "" ) { $stmt->bindParam(':positionRankId', $positionRankId); }
+				if( $sectionId <> "" ) { $stmt->bindParam(':sectionId', $sectionId); }	
+				$stmt->execute();	                
            ?> 
             <div class="row col-md-12 table-responsive">
 
@@ -150,22 +202,70 @@
                     <th>รหัส</th>
 					<th>ชื่อ นามสกุล</th>
 					<th>ตำแหน่ง</th>
-					<th>ผู้ประเมินคนที่ 1</th>
-					<th>ผู้ประเมินคนที่ 2</th>
-					<th>ผู้ประเมินคนที่ 3</th>
-					<th>เฉลี่ย</th>
+					<th>แผนก</th>
+					<th>เฉลี่ย</th>				
+					<th>เกรดตามเกณฑ์</th>				
+					<th>เกรด</th>
 					<th>#</th>
                 </tr></thead>
                 <tbody>
-                	
+                <?php $rowNo=($start+1); while ($row = $stmt->fetch()) { 
+						?>
+                <tr>
+					 <td>
+                         <?= $rowNo; ?>
+                    </td>
+                    <td>
+                         <?= $row['code']; ?>
+                    </td>
+                    <td>
+                         <?= $row['fullName']; ?>
+                    </td>
+                    <td>
+                         <?= $row['positionName']; ?>
+                    </td>
+                    <td>
+                         <?= $row['sectionName']; ?>
+                    </td>
+                    <td style="text-align: right;">
+                         <?= $row['score']; ?>
+                    </td>
+                    <td style="text-align: center;">
+                         <?= $row['gradeRankName']; ?>
+                    </td>
+                    <td>
+                    	<input type="hidden" name="itmId[]" value="<?=$row['id'];?>" />
+                         <select name="gradeId[]" class="form form-control">
+                         	<option value="0"> - เลือก - </option>
+							<?php
+								$gradeId=$row['gradeId'];
+								$sql = "SELECT `id`, `seqNo`, `name` FROM eval_grade ORDER BY seqNo, id ";
+								$stmt2 = $pdo->prepare($sql);
+								$stmt2->execute();	
+								While ( $itm = $stmt2->fetch() ){
+									$selected=($gradeId==$itm['id']?' selected ':'');
+									echo '<option value="'.$itm['id'].'" '.$selected.' >'.$itm['name'].'</option>';
+								}
+							?>
+						</select>
+                    </td>
+                    <td>
+                    	<a href="evaluate_view.php?tpId=<?=$row['id'];?>" class="btn btn-primary"><i fa fa-static></i> รายละเอียด</a>
+                    </td>
+                </tr>
+                <?php $rowNo+=1; } ?>	
                 </tbody>
             </table>
 			</form>
 			<!--/.form2-->
 			</div>
 
-			<div class="row col-md-12">				
-            	<a name="btnSubmit2" class="btn btn-primary  pull-right"><i class="fa fa-file"></i> นำออก Excel</a>
+			<?php $condQuery="?positionRankId=".$positionRankId."&sectionId=".$sectionId; ?>			
+			<div class="row col-md-12">		
+				<a href="<?=$rootPage;?>_xls.php<?=$condQuery;?>" class="btn btn-default pull-right"><i class="fa fa-print"></i> นำออก Excel</a>
+
+
+            	<a name="btnGradeSubmit" class="btn btn-primary pull-right"><i class="fa fa-save"></i> บันทึกเกรด</a>
 			</div>
     </div><!-- /.box-body -->
   <div class="box-footer">
@@ -200,115 +300,72 @@
 <script>
 $(document).ready(function() {
 	
-	function getListTotal(sectionId){		
+	 $('#sectionId').change(function() { //alert('f');
+        this.form.submit();
+    });
+
+	$('a[name=btnAutoGrading]').click(function(){
 		var params = {
-			action: 'getListTotal',
-			sectionId: sectionId
-		}; //alert(params.sendDate);
-		/* Send the data using post and put the results in a div */
-		$.ajax({
-		  url: "<?=$rootPage;?>_ajax.php",
-		  type: "post",
-		  data: params,
-		datatype: 'json',
-		  success: function(data){
-		  	if ( data.success === "success" ) {
-		  		//alert(data.rowCount);
-				return data.rowCount;
-		  	}else{ 
-		  		alert(data.message);
-				return 0;
-		  	}
-		  }   
-		}).error(function (response) {
-			alert(response.responseText);
-			return 0;
-		}); 
-	}
-	function getList(sectionId){ //alert(sectionId);
-		if( getListTotal(sectionId) <= 0 ) {
-
-		}else{	//alert('getListTotal ok');		
-			//alert(getEvaluatorList('evaluatorPersonId'));
-			var params = {
-				action: 'getList',
-				sectionId: sectionId,
-				start: 0,
-				rows: 200
-			}; //alert(params.sendDate);
-			/* Send the data using post and put the results in a div */
-			  $.ajax({
-				  url: "<?=$rootPage;?>_ajax.php",
-				  type: "post",
-				  data: params,
-				datatype: 'json',
-				  success: function(data){	//alert(data);
-				  	if ( data.success === "success" ) {
-				  		switch(data.rowCount){
-							case 0 : alert('Data not found.');
-								//$('#tbl_items tbody').empty();
-								return false; break;
-							default :
-								//$('#tbl_items tbody').empty();
-								$('#tblData tbody').fadeOut('slow').empty();
-								$rowNo=1;
-								$.each($.parseJSON(data.data), function(key,value){ 
-									$('#tblData').append(
-										'<tr>'+
-										'<input type="hidden" name=Id[] value="'+value.id+'" />'+
-										'<td style="text-align: center;">'+$rowNo+'</td>'+
-										'<td style="text-align: left;">'+value.code+'</td>'+
-										'<td style="text-align: left;">'+value.fullName+'</td>'+
-										'<td style="text-align: left;">'+value.positionName+'</td>'+
-										'<td style="text-align: left;">'+value.score+'</td>'+
-										'<td style="text-align: left;">'+value.score2+'</td>'+
-										'<td style="text-align: left;">'+value.score3+'</td>'+
-										'<td style="text-align: left;">'+value.avgScore+'</td>'+
-										'<td><a href="evaluate_view.php?tpId='+value.id+'" class="btn btn-primary"><i fa fa-static></i> สรุป</a></td>'+
-										'</tr>');
-									$rowNo+=1;
-								});
-								$('#tblData tbody').fadeIn('slow');
-						}//.switch
-				  	}else{ 
-				  		alert(data.message);
-						return 0;
-				  	}
-						
-				  }   
-				}).error(function (response) {
-					alert(response.responseText);
-				}); 
-		}//.if rowCount <=0 
-	}
-	getList('<?=$sectionId;?>');
-
-	$('a[name=btnSubmit2]').click(function(){
-		$.post({
-			url: '<?=$rootPage;?>_ajax.php',
-			data: $("#form2").serialize(),
-			dataType: 'json'
-		}).done(function (data) {					
-			if (data.status === "success"){ 
-				$.smkAlert({
-					text: data.message,
-					type: data.status,
-					position:'top-center'
-				});
-				location.reload();
-			} else {
-				alert(data.message);
-				$.smkAlert({
-					text: data.message,
-					type: data.status
-				});
-			}
-		}).error(function (response) {
-			alert(response.responseText);
-		}); 
+			action: 'autoGrading'
+		};
+		$.smkConfirm({text:'Are you sure ?',accept:'Yes', cancel:'Cancel'}, function (e){if(e){
+			$.post({
+				url: '<?=$rootPage;?>_ajax.php',
+				data: params,
+				dataType: 'json'
+			}).done(function (data) {					
+				if (data.success){ 
+					$.smkAlert({
+						text: data.message,
+						type: 'success',
+						position:'top-center'
+					});
+					//location.reload();
+				} else {
+					alert(data.message);
+					$.smkAlert({
+						text: data.message,
+						type: 'danger'//,
+					//                        position:'top-center'
+					});
+				}
+			}).error(function (response) {
+				alert(response.responseText);
+			}); 
+		}});
 		e.preventDefault();
 	});
-	//end btnSubmit2
+	//end btnRowDelete
+
+	$('a[name=btnGradeSubmit]').click(function(){
+		$.smkConfirm({text:'Are you sure to Submit ?',accept:'Yes', cancel:'Cancel'}, function (e){if(e){
+			$.post({
+				url: '<?=$rootPage;?>_ajax.php',
+				data: $("#form2").serialize(),
+				dataType: 'json'
+			}).done(function (data) {					
+				if (data.success){ 
+					$.smkAlert({
+						text: data.message,
+						type: 'success',
+						position:'top-center'
+					});
+					location.reload();
+				} else {
+					alert(data.message);
+					$.smkAlert({
+						text: data.message,
+						type: 'danger'//,
+					//                        position:'top-center'
+					});
+				}
+			}).error(function (response) {
+				alert(response.responseText);
+			}); 
+		}});
+		e.preventDefault();
+	});
+	//end btnSubmit
 	
 });
 </script>

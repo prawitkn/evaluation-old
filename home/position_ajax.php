@@ -12,16 +12,15 @@
 			case 'save' :				
 				try{
 				$id = $_POST['id'];
-				$code = $_POST['code'];
+				$positionRankId = $_POST['positionRankId'];
+				$sectionId = $_POST['sectionId'];
 				$name = $_POST['name'];
-				$ratio = $_POST['ratio'];
 				
 				if ( $id == "" ){
 					//Insert				
 					// Check duplication?
-					$sql = "SELECT id FROM `".$tb."` WHERE (code=:code OR name=:name) ";
+					$sql = "SELECT id FROM `".$tb."` WHERE (name=:name) ";
 					$stmt = $pdo->prepare($sql);	 
-					$stmt->bindParam(':code', $code);
 					$stmt->bindParam(':name', $name);
 					$stmt->execute();
 					if ($stmt->rowCount() >= 1){
@@ -31,10 +30,11 @@
 					  exit;    
 					}   
 		
-					$sql = "INSERT INTO `".$tb."` (`code`, `name`, `statusId`, `createTime`, `createUserId`)
-					 VALUES (:code, :name,1,NOW(),:createUserId) ";
+					$sql = "INSERT INTO `".$tb."` (`positionRankId`, `sectionId`, `name`, `statusId`, `createTime`, `createUserId`)
+					 VALUES (:positionRankId, :sectionId, :name,1,NOW(),:createUserId) ";
 					$stmt = $pdo->prepare($sql);	
-					$stmt->bindParam(':code', $code);
+					$stmt->bindParam(':positionRankId', $positionRankId);
+					$stmt->bindParam(':sectionId', $sectionId);
 					$stmt->bindParam(':name', $name);
 					$stmt->bindParam(':createUserId', $s_userId);
 					if ($stmt->execute()) {
@@ -47,15 +47,11 @@
 					}
 				}else{
 					//Update
-					$id = $_POST['id'];
-					$code = $_POST['code'];
-					$name = $_POST['name'];
 					$statusId = $_POST['statusId'];
 					
 					// Check user name duplication?
-					$sql = "SELECT id FROM `".$tb."` WHERE (code=:code OR name=:name) AND id<>:id ";
+					$sql = "SELECT id FROM `".$tb."` WHERE (name=:name) AND id<>:id ";
 					$stmt = $pdo->prepare($sql);	
-					$stmt->bindParam(':code', $code);
 					$stmt->bindParam(':name', $name);
 					$stmt->bindParam(':id', $id);
 					$stmt->execute();
@@ -67,7 +63,8 @@
 					} 	   
 					
 					//Sql
-					$sql = "UPDATE `".$tb."` SET `code`=:code 
+					$sql = "UPDATE `".$tb."` SET  `positionRankId`=:positionRankId 
+					, `sectionId`=:sectionId 
 					, `name`=:name
 					, `statusId`=:statusId
 					, `updateTime`=NOW()
@@ -75,7 +72,8 @@
 					WHERE id=:id 
 					";	
 					$stmt = $pdo->prepare($sql);	
-					$stmt->bindParam(':code', $code);
+					$stmt->bindParam(':positionRankId', $positionRankId);
+					$stmt->bindParam(':sectionId', $sectionId);
 					$stmt->bindParam(':name', $name);
 					$stmt->bindParam(':statusId', $statusId);
 					$stmt->bindParam(':updateUserId', $s_userId);

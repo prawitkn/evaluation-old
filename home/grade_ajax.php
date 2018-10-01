@@ -1,8 +1,8 @@
 ,<?php
     include 'session.php';	
 		
-$rootPage = 'topicGroup';
-$tb = 'eval_topic_group';
+$rootPage = 'grade';
+$tb = 'eval_grade';
 	
 	if(!isset($_POST['action'])){		
 		header('Content-Type: application/json');
@@ -45,9 +45,6 @@ $tb = 'eval_topic_group';
 					}
 				}else{
 					//Update
-					$id = $_POST['id'];
-					$name = $_POST['name'];
-					$ratio = $_POST['ratio'];
 					$statusId = $_POST['statusId'];
 					
 					// Check user name duplication?
@@ -94,46 +91,6 @@ $tb = 'eval_topic_group';
 				} // catch			
 				break;
 				exit();
-			case 'edit' :
-				$id = $_POST['id'];
-				$code = $_POST['code'];
-				$name = $_POST['name'];
-				$statusId = $_POST['statusId'];
-				
-				// Check user name duplication?
-				$sql = "SELECT id FROM `".$tb."` WHERE (code=:code OR name=:name) AND id<>:id ";
-				$stmt = $pdo->prepare($sql);	
-				$stmt->bindParam(':code', $code);
-				$stmt->bindParam(':name', $name);
-				$stmt->bindParam(':id', $id);
-				$stmt->execute();
-				if ($stmt->rowCount() >= 1){
-				  header('Content-Type: application/json');
-				  $errors = "Error on Data Insertion. Duplicate data.";
-				  echo json_encode(array('success' => false, 'message' => $errors));  
-				  exit;    
-				} 	   
-				
-				//Sql
-				$sql = "UPDATE `".$tb."` SET `code`=:code 
-				, `name`=:name
-				, `statusId`=:statusId
-				WHERE id=:id 
-				";	
-				$stmt = $pdo->prepare($sql);	
-				$stmt->bindParam(':code', $code);
-				$stmt->bindParam(':name', $name);
-				$stmt->bindParam(':statusId', $statusId);
-				$stmt->bindParam(':id', $id);
-				if ($stmt->execute()) {
-					  header('Content-Type: application/json');
-					  echo json_encode(array('success' => true, 'message' => 'Data Updated Complete.'));
-				   } else {
-					  header('Content-Type: application/json');
-					  $errors = "Error on Data Update. Please try new data. " . $pdo->errorInfo();
-					  echo json_encode(array('success' => false, 'message' => $errors));
-				}	
-				break;
 			case 'setActive' :
 				$id = $_POST['id'];
 				$statusId = $_POST['statusId'];	

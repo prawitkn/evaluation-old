@@ -204,8 +204,7 @@
                   <td>
                     <a href="evaluate.php?personId='.$row['id'].'"  
                         class="btn btn-primary"><i class="fa fa-edit"></i> ประเมิน</a>
-                    <a href="evaluate_view.php?tpId='.$row['id'].'"  
-                        class="btn btn-primary"><i class="fa fa-search"></i> สรุป</a>'.
+                    <a href="evaluate_view.php?tpId='.$row['id'].'" class="btn btn-primary"><i fa fa-static></i> รายละเอียด</a>'.
                   '</td>
                   </tr>';
                   $rowNo+=1;

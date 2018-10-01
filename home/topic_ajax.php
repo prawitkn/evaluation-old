@@ -13,24 +13,20 @@
 				try{
 				$id = $_POST['id'];
 				$topicGroupId = $_POST['topicGroupId'];
-				$positionGroupId = $_POST['positionGroupId'];
 				$positionId = $_POST['positionId'];
 				$name = $_POST['name'];
 				$nameDesc = $_POST['nameDesc'];
 
-				$positionGroupId=($positionGroupId<>""?$positionGroupId:'0');
 				$positionId=($positionId<>""?$positionId:'0');			
 				
 				if ( $id == "" ){
 					//Insert				
 					// Check duplication?
 					$sql = "SELECT id FROM `".$tb."` WHERE (topicGroupId=:topicGroupId
-					 AND positionGroupId=:positionGroupId
 					 AND positionId=:positionId
 					 AND name=:name) ";
 					$stmt = $pdo->prepare($sql);	 
 					$stmt->bindParam(':topicGroupId', $topicGroupId);
-					$stmt->bindParam(':positionGroupId', $positionGroupId);
 					$stmt->bindParam(':positionId', $positionId);
 					$stmt->bindParam(':name', $name);
 					$stmt->execute();
@@ -41,11 +37,10 @@
 					  exit;    
 					}   
 		
-					$sql = "INSERT INTO `".$tb."` (`topicGroupId`, `positionGroupId`, `positionId`, `name`, `nameDesc`, `statusId`, `createTime`, `createUserId`)
-					 VALUES (:topicGroupId, :positionGroupId, :positionId, :name, :nameDesc,1,NOW(),:createUserId) ";
+					$sql = "INSERT INTO `".$tb."` (`topicGroupId`, `positionId`, `name`, `nameDesc`, `statusId`, `createTime`, `createUserId`)
+					 VALUES (:topicGroupId, :positionId, :name, :nameDesc,1,NOW(),:createUserId) ";
 					$stmt = $pdo->prepare($sql);	
 					$stmt->bindParam(':topicGroupId', $topicGroupId);
-					$stmt->bindParam(':positionGroupId', $positionGroupId);
 					$stmt->bindParam(':positionId', $positionId);
 					$stmt->bindParam(':name', $name);
 					$stmt->bindParam(':nameDesc', $nameDesc);
@@ -62,24 +57,20 @@
 					//Update
 					$id = $_POST['id'];
 					$topicGroupId = $_POST['topicGroupId'];
-					$positionGroupId = $_POST['positionGroupId'];
 					$positionId = $_POST['positionId'];
 					$name = $_POST['name'];
 					$nameDesc = $_POST['nameDesc'];
 					$statusId = $_POST['statusId'];
 
-					$positionGroupId=($positionGroupId<>""?$positionGroupId:'0');
 					$positionId=($positionId<>""?$positionId:'0');		
 					
 					// Check user name duplication?
 					$sql = "SELECT id FROM `".$tb."` WHERE (topicGroupId=:topicGroupId
-					 AND positionGroupId=:positionGroupId
 					 AND positionId=:positionId
 					 AND name=:name) 
 					 AND id<>:id ";
 					$stmt = $pdo->prepare($sql);	 
 					$stmt->bindParam(':topicGroupId', $topicGroupId);
-					$stmt->bindParam(':positionGroupId', $positionGroupId);
 					$stmt->bindParam(':positionId', $positionId);
 					$stmt->bindParam(':name', $name);
 					$stmt->bindParam(':id', $id);
@@ -93,7 +84,6 @@
 					
 					//Sql
 					$sql = "UPDATE `".$tb."` SET `topicGroupId`=:topicGroupId 
-					, `positionGroupId`=:positionGroupId
 					, `positionId`=:positionId
 					, `name`=:name
 					, `nameDesc`=:nameDesc
@@ -104,7 +94,6 @@
 					";	
 					$stmt = $pdo->prepare($sql);	
 					$stmt->bindParam(':topicGroupId', $topicGroupId);
-					$stmt->bindParam(':positionGroupId', $positionGroupId);
 					$stmt->bindParam(':positionId', $positionId);
 					$stmt->bindParam(':name', $name);
 					$stmt->bindParam(':nameDesc', $nameDesc);
@@ -205,7 +194,9 @@
 					echo json_encode(array('success' => false, 'message' => $errors));
 				}
 				break;
-				
+
+			
+
 			default : 
 				header('Content-Type: application/json');
 				echo json_encode(array('success' => false, 'message' => 'Unknow action.'));				

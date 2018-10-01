@@ -5,7 +5,7 @@
         header("Location: login.php");
     }
     
-	include '../Private/db/db.php';
+	include '../sys/db/db.php';
 			
     $s_userId=$_SESSION['userId'];
     $sql = "SELECT * FROM ".$dtPrefix."user WHERE userId='$s_userId' LIMIT 1";

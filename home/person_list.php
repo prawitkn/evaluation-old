@@ -2,7 +2,7 @@
   include ("session.php");
 	//Check user roll.
 	switch($s_userGroupCode){
-		case 1 : case 3 :   
+		case 1 : case 3 : 
 			break;
 		default : 
 			header('Location: access_denied.php');
@@ -12,10 +12,12 @@
 ?>
 
 <?php 
+	$rootPage = 'person';
+	$tb = 'eval_person';
 
-	$rootPage = 'positionRank';
-	$tb = 'eval_position_rank';
-
+	$searchWord=( isset($_GET['searchWord']) ? $_GET['searchWord'] : '' );
+	$sectionId=( isset($_GET['sectionId']) ? $_GET['sectionId'] : '' );	
+	$positionRankId=( isset($_GET['positionRankId']) ? $_GET['positionRankId'] : '' );
 ?>	
 </head>
 <body class="hold-transition skin-yellow sidebar-mini ">    
@@ -33,14 +35,14 @@
     <!-- Content Header (Page header) -->
 	<section class="content-header">
 		<h1><i class="fa fa-th-list"></i>
-       ระดับตำแหน่ง
+       พนักงาน
         <small>การจัดการข้อมูลหลัก</small>
       </h1>
 
 
       <ol class="breadcrumb">
        <li><a href="index.php"><i class="fa fa-home"></i>หน้าแรก</a></li>
-       <!--<li><a href="<?=$rootPage;?>_list.php"><i class="fa fa-list"></i>รายการ ระดับตำแหน่ง</a></li>-->
+       <!--<li><a href="<?=$rootPage;?>_list.php"><i class="fa fa-list"></i>รายการ พนักงาน</a></li>-->
       </ol>
     </section>
 
@@ -50,10 +52,10 @@
 <!-- To allow only admin to access the content -->      
     <div class="box box-primary">
         <div class="box-header with-border">
-		<label class="box-title">รายการ ระดับตำแหน่ง</label>
+		<label class="box-title">รายการ พนักงาน</label>
 
 
-			<a href="<?=$rootPage;?>_data.php?id=" class="btn btn-primary"><i class="glyphicon glyphicon-plus"></i> เพิ่ม ระดับตำแหน่ง</a>
+			<a href="<?=$rootPage;?>_data.php?id=" class="btn btn-primary"><i class="glyphicon glyphicon-plus"></i> เพิ่ม พนักงาน</a>
 		
 		
         <div class="box-tools pull-right">
@@ -63,19 +65,21 @@
                 //$sql_user = "SELECT COUNT(*) AS COUNTUSER FROM wh_user";
                // $result_user = mysqli_query($link, $sql_user);
                // $count_user = mysqli_fetch_assoc($result_user);
-				
-				$search_word="";
+	
                 $sql = "
 				SELECT COUNT(*) AS countTotal 
 				FROM `".$tb."` hdr  
+				INNER JOIN eval_position pos ON pos.id=hdr.positionId 
 				WHERE 1=1 ";
-				if(isset($_GET['search_word']) and isset($_GET['search_word'])){
-					$search_word=$_GET['search_word'];
-					$sql .= "and (hdr.name like '%".$_GET['search_word']."%' ) ";
-				}			
-                //$result = mysqli_query($link, $sql);
-                //$countTotal = mysqli_fetch_assoc($result);
-                $stmt = $pdo->prepare($sql);	
+				if($searchWord<>""){ $sql .= "AND hdr.fullName like :searchWord "; }
+
+				if($sectionId<>""){ $sql .= "AND hdr.sectionId =  :sectionId "; }
+				if($positionRankId<>""){ $sql .= "AND pos.positionRankId = :positionRankId "; }
+				//echo $sql;
+              	$stmt = $pdo->prepare($sql);	
+                if($searchWord<>""){ $tmp='%'.$searchWord.'%'; $stmt->bindParam(':searchWord', $tmp); }
+                if($sectionId<>""){ $stmt->bindParam(':sectionId', $sectionId); }
+                if($sectionId<>""){ $stmt->bindParam(':positionRankId', $positionRankId); }
 				$stmt->execute();	//echo $sql;
 				$countTotal = $stmt->fetch()['countTotal'];
 				
@@ -95,10 +99,50 @@
         <div class="box-body">
 			<div class="row col-md-12">				
 				<form id="form1" action="<?=$rootPage;?>_list.php" method="get" class="form" novalidate>
-					<div class="col-md-6">
+					<div class="col-md-2">
 						<div class="form-group">
-	                        <label for="search_word">บางส่วนของ ชื่อระดับตำแหน่ง เพื่อใช้ค้นหาข้อมูล</label>
-							<input id="search_word" type="text" class="form-control" name="search_word" data-smk-msg="Require userFullname."required>
+	                        <label for="sectionId">แผนก</label>
+							<select id="sectionId" name="sectionId" class="form-control"  data-smk-msg="จำเป็น" required>
+								<option value="">--ทั้งหมด--</option>
+								<?php
+								$sql = "SELECT `id`, `code`, `name`, `statusId`  FROM `eval_section` WHERE statusId=1 ";		
+								$stmt = $pdo->prepare($sql);		
+								$stmt->execute();
+								while($itm = $stmt->fetch()){
+									$selected=( $sectionId==$itm['id'] ? ' selected ' : '' );
+									echo '<option value="'.$itm['id'].'" '.$selected.'
+										 >'.$itm['name'].'</option>';
+								}
+								?>
+							</select>
+	                    </div>		                    
+					</div>
+					<!--/.col-md-->
+
+					<div class="col-md-2">
+						<div class="form-group">
+	                        <label for="positionRankId">ระดับ ตำแหน่ง</label>
+							<select id="positionRankId" name="positionRankId" class="form-control"  data-smk-msg="จำเป็น" required>
+								<option value="">--ทั้งหมด--</option>
+								<?php
+								$sql = "SELECT `id`, `code`, `name`, `statusId`  FROM `eval_position_rank` WHERE StatusId=1 ";		
+								$stmt = $pdo->prepare($sql);		
+								$stmt->execute();
+								while($itm = $stmt->fetch()){
+									$selected=( $positionRankId==$itm['id'] ? ' selected ' : '' );
+									echo '<option value="'.$itm['id'].'" '.$selected.'
+										 >'.$itm['name'].'</option>';
+								}
+								?>
+							</select>
+	                    </div>		                    
+					</div>
+					<!--/.col-md-->
+
+					<div class="col-md-4">
+						<div class="form-group">
+	                        <label for="searchWord">บางส่วนของ ชื่อ นามสกุล เพื่อใช้ค้นหาข้อมูล</label>
+							<input id="searchWord" type="text" class="form-control" name="searchWord" value="<?=$searchWord;?>">
 	                    </div>	
 	                    <!--form-group-->
 					</div>
@@ -119,23 +163,32 @@
 			<!--/.row-->
            <?php
 				$sql = "
-				SELECT hdr.`id`, hdr.`seqNo`, hdr.`code`, hdr.`name`, hdr.`statusId`
+				SELECT hdr.`id`, hdr.`code`, hdr.`seqNo`, hdr.`fullName`, hdr.`statusId`
 				, hdr.`createTime`, hdr.`createUserId`, hdr.`updateTime`, hdr.`updateUserId`
+				, IFNULL(pos.name,'') as positionName 
+				, IFNULL(sec.name,'ทั้งหมด') as sectionName
+
 				, uc.userFullname as createUserName 
 				, uu.userFullname as updateUserName 
 				FROM `".$tb."` hdr 
+				LEFT JOIN eval_position pos ON pos.id=hdr.positionId 
+				LEFT JOIN eval_section sec ON sec.id=pos.sectionId 
+
 				LEFT JOIN `eval_user` uc on uc.userId=hdr.createUserId 
 				LEFT JOIN `eval_user` uu on uu.userId=hdr.updateUserId 
 				WHERE 1=1 ";
-				if(isset($_GET['search_word']) and isset($_GET['search_word'])){
-					$search_word=$_GET['search_word'];
-					$sql .= "and (hdr.name like '%".$_GET['search_word']."%' ) ";
-				}	
+				if($searchWord<>""){ $sql .= "AND hdr.fullName like :searchWord "; }
+				if($sectionId<>""){ $sql .= "AND hdr.sectionId = :sectionId "; }
+				if($positionRankId<>""){ $sql .= "AND pos.positionRankId = :positionRankId "; }
+	
 				$sql .= "ORDER BY hdr.seqNo ASC
 						LIMIT $start, $rows 
-				";		
-                //$result = mysqli_query($link, $sql);
+				";		  //echo $sql;
 				$stmt = $pdo->prepare($sql);	
+                if($searchWord<>""){ $tmp='%'.$searchWord.'%'; $stmt->bindParam(':searchWord', $tmp); }
+                if($sectionId<>""){ $stmt->bindParam(':sectionId', $sectionId); }
+                if($sectionId<>""){ $stmt->bindParam(':positionRankId', $positionRankId); }
+
 				$stmt->execute();	//echo $sql;
               
            ?> 
@@ -143,29 +196,37 @@
             	<input type="hidden" name="action" value="tableSubmit" />
             <table class="table table-striped">
                 <tr style="background-color: #ffcc99;">
-					<th>ลำดับ</th>
 					<th>ID</th>
-					<th>รหัส ระดับตำแหน่ง</th>
-					<th>ชื่อระดับตำแหน่ง</th>
+					<th>ลำดับ</th>
+					<th>หมายเลข</th>
+					<th>ชื่อ - นามสกุล</th>
+					<th>ตำแหน่ง</th>
+					<th>แผนก</th>
                     <th>สถานะ</th>
                     <th>#</th>
                 </tr>
                 <?php $c_row=($start+1); while ($row = $stmt->fetch()) { 
 						?>
                 <tr>
+					 <td>
+                         <?= $row['id']; ?>
+                    </td>
 					<td>
 						<input type="hidden" name="id[]" value="<?=$row['id'];?>"  />
 						<input type="text" name="seqNo[]" class="form-control" style="width: 50px; text-align: right;" value="<?=$row['seqNo'];?>" onkeypress="return numbersOnly(this, event);" 
 								onpaste="return false;" />
-                    </td>
-					 <td>
-                         <?= $row['id']; ?>
-                    </td>
+                    </td>                    
                     <td>
                          <?= $row['code']; ?>
                     </td>
                     <td>
-                         <?= $row['name']; ?>
+                         <?= $row['fullName']; ?>
+                    </td>
+                    <td>
+                         <?= $row['positionName']; ?>
+                    </td>
+                    <td>
+                         <?= $row['sectionName']; ?>
                     </td>
                     <td>
 						 <?php
@@ -213,20 +274,20 @@
 			</form>
 			<!--/.form2-->
 			
-			<a href="#" name="btnSubmit" class="btn btn-primary" ><i class="fa fa-save"></i> อัพเดต ลำดับการแสดงข้อมูลทั้งหมด</a>
+			<a href="#" name="btnSubmit" class="btn btn-primary" ><i class="fa fa-save"></i> อัพเดต ลำดับการแสดงข้อมูล ตามแผนก</a>
 				
 			<nav>
 			<ul class="pagination">
 				<li <?php if($page==1) echo 'class="disabled"'; ?> >
-					<a href="<?=$rootPage;?>_list.php?search_word=<?= $search_word;?>&=page=<?= $page-1; ?>" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a>
+					<a href="<?=$rootPage;?>_list.php?searchWord=<?= $searchWord;?>&=page=<?= $page-1; ?>" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a>
 				</li>
 				<?php for($i=1; $i<=$total_page;$i++){ ?>
 				<li <?php if($page==$i) echo 'class="active"'; ?> >
-					<a href="<?=$rootPage;?>_list.php?search_word=<?= $search_word;?>&page=<?= $i?>" > <?= $i;?></a>			
+					<a href="<?=$rootPage;?>_list.php?searchWord=<?= $searchWord;?>&page=<?= $i?>" > <?= $i;?></a>			
 				</li>
 				<?php } ?>
 				<li <?php if($page==$total_page) echo 'class="disabled"'; ?> >
-					<a href="<?=$rootPage;?>_list.php?search_word=<?= $search_word;?>&page=<?=$page+1?>" aria-labels="Next"><span aria-hidden="true">&raquo;</span></a>
+					<a href="<?=$rootPage;?>_list.php?searchWord=<?= $searchWord;?>&page=<?=$page+1?>" aria-labels="Next"><span aria-hidden="true">&raquo;</span></a>
 				</li>
 			</ul>
 			</nav>

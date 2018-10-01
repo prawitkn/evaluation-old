@@ -2,7 +2,7 @@
   include ("session.php");
 	//Check user roll.
 	switch($s_userGroupCode){
-		case 1 :  
+		case 1 : case 3 : 
 			break;
 		default : 
 			header('Location: access_denied.php');
@@ -12,7 +12,7 @@
 ?>
 
 </head>
-<body class="hold-transition skin-yellow sidebar-mini sidebar-collapse">    
+<body class="hold-transition skin-yellow sidebar-mini ">    
 
 <div class="wrapper">
 
@@ -56,7 +56,6 @@
 
 			<a href="<?=$rootPage;?>_data.php?id=" class="btn btn-primary"><i class="glyphicon glyphicon-plus"></i> เพิ่ม ห้วงเวลาการประเมิน</a>
 		
-		
         <div class="box-tools pull-right">
           <!-- Buttons, labels, and many other things can be placed here! -->
           <!-- Here is a label for example -->
@@ -92,6 +91,14 @@
           ?>
           <span class="label label-primary">จำนวน <?=$total_data; ?> รายการ</span>
         </div><!-- /.box-tools -->
+
+        	<form id="form3" action="#" method="post" class="form form-inline" novalidate>
+				<div class="pull-right">
+					<input type="hidden" name="action" value="createData" />
+
+					<a href="#" name="btnCreate" class="btn btn-danger"><i class="fa fa-save"></i> สร้างข้อมูลการประเมินจากห้วงการประเมินปัจจุบัน</a>
+				</div>
+			</form>
         </div><!-- /.box-header -->
         <div class="box-body">
 			<div class="row col-md-12">				
@@ -143,7 +150,7 @@
             <form id="form2" class="form">
             	<input type="hidden" name="action" value="tableSubmit" />
             <table class="table table-striped">
-                <tr>
+                <tr style="background-color: #ffcc99;">
 					<th>ID</th>
 					<th>ลำดับ</th>
 					<th>ปี ห้วงเวลาการประเมิน</th>
@@ -445,6 +452,34 @@ $(document).ready(function() {
 		e.preventDefault();
 	});
 	//end btnSubmit
+
+	$('a[name=btnCreate]').click(function(){
+		$.post({
+			url: '<?=$rootPage;?>_ajax.php',
+			data: $("#form3").serialize(),
+			dataType: 'json'
+		}).done(function (data) { //alert(data);					
+			if (data.success === "success"){ 
+				$.smkAlert({
+					text: data.message,
+					type: data.success,
+					position:'top-center'
+				});
+				//location.reload();
+			} else {
+				alert(data.message);
+				$.smkAlert({
+					text: data.message,
+					type: data.success,
+					position:'top-center'
+				});
+			}
+		}).error(function (response) {
+			alert(response.responseText);
+		}); 
+		e.preventDefault();
+	});
+	//end btnConfirm
 });
 </script>
 
