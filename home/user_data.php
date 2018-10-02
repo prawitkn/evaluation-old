@@ -1,27 +1,24 @@
 <?php
-  //  include '../db/database.php';
-?>
-<!DOCTYPE html>
-<!--
-This is a starter template page. Use this page to start your new project from
-scratch. This page gets rid of all links and provides the needed markup only.
--->
-<html>
-<?php include 'head.php'; 
-$rootPage = 'User';
-
-//Check user roll.
-switch($s_userGroupCode){
-	case 1 : 
-		break;
-	default : 
-		header('Location: access_denied.php');
-		exit();
-}
+  include ("session.php");
+	//Check user roll.
+	switch($s_userGroupCode){
+		case 1 : 
+			break;
+		default : 
+			header('Location: access_denied.php');
+			exit();
+	}  
+  include 'head.php'; 
 ?>
 
+<?php 
+
+	$rootPage = 'user';
+	$tb = 'eval_user';
+
+?>	
 </head>
-<body class="hold-transition skin-yellow sidebar-mini sidebar-collapse">
+<body class="hold-transition skin-yellow sidebar-mini">   
 	
 <div class="wrapper">
 
@@ -40,7 +37,7 @@ switch($s_userGroupCode){
         <small>User management</small>
       </h1>
 	  <ol class="breadcrumb">
-        <li><a href="<?=$rootPage;?>.php"><i class="fa fa-list"></i>User List</a></li>
+        <li><a href="<?=$rootPage;?>_list.php"><i class="fa fa-list"></i>User List</a></li>
 		<li><a href="#"><i class="fa fa-edit"></i>Add new user</a></li>
       </ol>
     </section>
@@ -61,7 +58,7 @@ switch($s_userGroupCode){
         </div><!-- /.box-tools -->
         </div><!-- /.box-header -->
         <div class="box-body">  <form id="form1" method="post" class="form" enctype="multipart/form-data" validate>
-			<form id="form1" action="<?=$rootPage;?>Ajax.php" method="post" class="form" validate >
+			<form id="form1" action="<?=$rootPage;?>_ajax.php" method="post" class="form" validate >
 				<div class="row"> 
 					<input type="hidden" name="action" value="add" />
 					
@@ -193,7 +190,7 @@ $(document).ready(function() {
 	$('#form1').on("submit", function(e) {
 		if ($('#form1').smkValidate()) {
 			$.ajax({
-			url: '<?=$rootPage;?>Ajax.php',
+			url: '<?=$rootPage;?>_ajax.php',
 			type: 'POST',
 			data: new FormData( this ),
 			processData: false,

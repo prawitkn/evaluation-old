@@ -8,7 +8,7 @@
 			break;
 			exit();
 		case 3 :
-			header('Location: evaluate_result.php');
+			header('Location: index3.php');
 			break;
 			exit();
 		default : 

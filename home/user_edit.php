@@ -1,23 +1,26 @@
 <?php
-  //  include '../db/database.php';
+  include ("session.php");
+	//Check user roll.
+	switch($s_userGroupCode){
+		case 1 : 
+			break;
+		default : 
+			header('Location: access_denied.php');
+			exit();
+	}  
+  include 'head.php'; 
 ?>
-<!DOCTYPE html>
-<!--
-This is a starter template page. Use this page to start your new project from
-scratch. This page gets rid of all links and provides the needed markup only.
--->
-<html>
-<?php include 'head.php'; 
-$rootPage = 'user';
 
-//Check user roll.
-switch($s_userGroupCode){
-	case 1 : 
-		break;
-	default : 
-		header('Location: access_denied.php');
-		exit();
-}
+<?php 
+
+	$rootPage = 'user';
+	$tb = 'eval_user';
+
+?>	
+</head>
+<body class="hold-transition skin-yellow sidebar-mini">   
+
+<?php
 $Id=$_GET['Id'];
 
 $sql = "SELECT hdr.`userId`, hdr.`userName`, hdr.`userPassword`, hdr.`userPin`, hdr.`userFullname`
@@ -39,9 +42,6 @@ $stmt->bindParam(':Id', $Id);
 $stmt->execute();	
 $row=$stmt->fetch();	
 ?>
-
-</head>
-<body class="hold-transition skin-yellow sidebar-mini sidebar-collapse">
 	
 <div class="wrapper">
 
@@ -60,7 +60,7 @@ $row=$stmt->fetch();
         <small>User group management</small>
       </h1>
 	  <ol class="breadcrumb">
-        <li><a href="<?=$rootPage;?>.php"><i class="fa fa-list"></i>User Group List</a></li>
+        <li><a href="<?=$rootPage;?>_list.php"><i class="fa fa-list"></i>User Group List</a></li>
 		<li><a href="#"><i class="fa fa-edit"></i>Edit User Group</a></li>
       </ol>
     </section>
@@ -220,7 +220,7 @@ $(document).ready(function() {
 	$('#form1').on("submit", function(e) { 
 		if ($('#form1').smkValidate()) {
 			$.ajax({
-			url: '<?=$rootPage;?>Ajax.php',
+			url: '<?=$rootPage;?>_ajax.php',
 			type: 'POST',
 			data: new FormData( this ),
 			processData: false,

@@ -1,27 +1,24 @@
+<?php
+  include ("session.php");
+	//Check user roll.
+	switch($s_userGroupCode){
+		case 1 : 
+			break;
+		default : 
+			header('Location: access_denied.php');
+			exit();
+	}  
+  include 'head.php'; 
+?>
 
-<!DOCTYPE html>
-<!--
-This is a starter template page. Use this page to start your new project from
-scratch. This page gets rid of all links and provides the needed markup only.
--->
-<html>
-<?php include 'head.php'; 
-$rootPage = 'User';
-$tb = $dtPrefix."user";
+<?php 
 
-//Check user roll.
-switch($s_userGroupCode){
-	case 1 :
-		break;
-	default : 
-		header('Location: access_denied.php');
-		exit();
-}
-?>	<!-- head.php included session.php! -->
- 
-    
- </head>
-<body class="hold-transition skin-yellow sidebar-mini sidebar-collapse">   
+	$rootPage = 'user';
+	$tb = 'eval_user';
+
+?>	
+</head>
+<body class="hold-transition skin-yellow sidebar-mini">    
 
 <div class="wrapper">
 
@@ -52,7 +49,7 @@ switch($s_userGroupCode){
         <div class="box-header with-border">
         	<label class="box-tittle" style="font-size: 20px;"><i class="fa fa-list"></i> User list</label>
 
-			<a href="<?=$rootPage;?>Add.php?id=" class="btn btn-primary"><i class="fa fa-plus"></i> Add user</a>
+			<a href="<?=$rootPage;?>_data.php?id=" class="btn btn-primary"><i class="fa fa-plus"></i> Add user</a>
 
 			<a href="#" name="btnSync" class="btn btn-primary"><i class="fa fa-refresh"></i> ปรับปรุงตามข้อมูลพนักงาน</a>
 		
@@ -191,7 +188,7 @@ switch($s_userGroupCode){
                     <td>
 						
 						<?php if($row['StatusId']==1){ ?>
-							<a class="btn btn-primary" name="btn_row_edit" href="<?=$rootPage;?>Edit.php?act=edit&Id=<?= $row['userId']; ?>" >
+							<a class="btn btn-primary" name="btn_row_edit" href="<?=$rootPage;?>_edit.php?act=edit&Id=<?= $row['userId']; ?>" >
 								<i class="fa fa-edit"></i> Edit</a>	
 						<?php }else{ ?>	
 							<a class="btn btn-primary"  disabled  > 
@@ -218,15 +215,15 @@ switch($s_userGroupCode){
 			<nav>
 			<ul class="pagination">
 				<li <?php if($page==1) echo 'class="disabled"'; ?> >
-					<a href="<?=$rootPage;?>.php?search_word=<?= $search_word;?>&=page=<?= $page-1; ?>" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a>
+					<a href="<?=$rootPage;?>_list.php?search_word=<?= $search_word;?>&=page=<?= $page-1; ?>" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a>
 				</li>
 				<?php for($i=1; $i<=$total_page;$i++){ ?>
 				<li <?php if($page==$i) echo 'class="active"'; ?> >
-					<a href="<?=$rootPage;?>.php?search_word=<?= $search_word;?>&page=<?= $i?>" > <?= $i;?></a>			
+					<a href="<?=$rootPage;?>_list.php?search_word=<?= $search_word;?>&page=<?= $i?>" > <?= $i;?></a>			
 				</li>
 				<?php } ?>
 				<li <?php if($page==$total_page) echo 'class="disabled"'; ?> >
-					<a href="<?=$rootPage;?>.php?search_word=<?= $search_word;?>&page=<?=$page+1?>" aria-labels="Next"><span aria-hidden="true">&raquo;</span></a>
+					<a href="<?=$rootPage;?>_list.php?search_word=<?= $search_word;?>&page=<?=$page+1?>" aria-labels="Next"><span aria-hidden="true">&raquo;</span></a>
 				</li>
 			</ul>
 			</nav>
@@ -272,7 +269,7 @@ $(document).ready(function() {
 		};
 		$.smkConfirm({text:'Are you sure ?',accept:'Yes', cancel:'Cancel'}, function (e){if(e){
 			$.post({
-				url: '<?=$rootPage;?>Ajax.php',
+				url: '<?=$rootPage;?>_ajax.php',
 				data: params,
 				dataType: 'json'
 			}).done(function (data) {					
@@ -306,7 +303,7 @@ $(document).ready(function() {
 		};
 		$.smkConfirm({text:'Are you sure to Remove ?',accept:'Yes', cancel:'Cancel'}, function (e){if(e){
 			$.post({
-				url: '<?=$rootPage;?>Ajax.php',
+				url: '<?=$rootPage;?>_ajax.php',
 				data: params,
 				dataType: 'json'
 			}).done(function (data) {					
@@ -339,7 +336,7 @@ $(document).ready(function() {
 		};
 		$.smkConfirm({text:'Are you sure to Delete ?',accept:'Yes', cancel:'Cancel'}, function (e){if(e){
 			$.post({
-				url: '<?=$rootPage;?>Ajax.php',
+				url: '<?=$rootPage;?>_ajax.php',
 				data: params,
 				dataType: 'json'
 			}).done(function (data) {					
@@ -371,7 +368,7 @@ $(document).ready(function() {
 		};
 		$.smkConfirm({text:'Are you sure to Sync ?',accept:'Yes', cancel:'Cancel'}, function (e){if(e){
 			$.post({
-				url: '<?=$rootPage;?>Ajax.php',
+				url: '<?=$rootPage;?>_ajax.php',
 				data: params,
 				dataType: 'json'
 			}).done(function (data) {					

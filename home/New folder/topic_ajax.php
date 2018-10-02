@@ -1,8 +1,8 @@
 <?php
     include 'session.php';	
 		
-$rootPage = 'grade';
-$tb = 'eval_grade';
+	$rootPage = 'topic';
+	$tb = 'eval_topic';
 	
 	if(!isset($_POST['action'])){		
 		header('Content-Type: application/json');
@@ -12,14 +12,22 @@ $tb = 'eval_grade';
 			case 'save' :				
 				try{
 				$id = $_POST['id'];
+				$topicGroupId = $_POST['topicGroupId'];
+				$positionId = $_POST['positionId'];
 				$name = $_POST['name'];
-				$ratio = $_POST['ratio'];
+				$nameDesc = $_POST['nameDesc'];
+
+				$positionId=($positionId<>""?$positionId:'0');			
 				
 				if ( $id == "" ){
 					//Insert				
 					// Check duplication?
-					$sql = "SELECT id FROM `".$tb."` WHERE name=:name ";
+					$sql = "SELECT id FROM `".$tb."` WHERE (topicGroupId=:topicGroupId
+					 AND positionId=:positionId
+					 AND name=:name) ";
 					$stmt = $pdo->prepare($sql);	 
+					$stmt->bindParam(':topicGroupId', $topicGroupId);
+					$stmt->bindParam(':positionId', $positionId);
 					$stmt->bindParam(':name', $name);
 					$stmt->execute();
 					if ($stmt->rowCount() >= 1){
@@ -29,11 +37,13 @@ $tb = 'eval_grade';
 					  exit;    
 					}   
 		
-					$sql = "INSERT INTO `".$tb."` (`name`, `ratio`, `statusId`, `createTime`, `createUserId`)
-					 VALUES (:name,:ratio,1,NOW(),:createUserId) ";
+					$sql = "INSERT INTO `".$tb."` (`topicGroupId`, `positionId`, `name`, `nameDesc`, `statusId`, `createTime`, `createUserId`)
+					 VALUES (:topicGroupId, :positionId, :name, :nameDesc,1,NOW(),:createUserId) ";
 					$stmt = $pdo->prepare($sql);	
+					$stmt->bindParam(':topicGroupId', $topicGroupId);
+					$stmt->bindParam(':positionId', $positionId);
 					$stmt->bindParam(':name', $name);
-					$stmt->bindParam(':ratio', $ratio);
+					$stmt->bindParam(':nameDesc', $nameDesc);
 					$stmt->bindParam(':createUserId', $s_userId);
 					if ($stmt->execute()) {
 						header('Content-Type: application/json');
@@ -45,11 +55,23 @@ $tb = 'eval_grade';
 					}
 				}else{
 					//Update
+					$id = $_POST['id'];
+					$topicGroupId = $_POST['topicGroupId'];
+					$positionId = $_POST['positionId'];
+					$name = $_POST['name'];
+					$nameDesc = $_POST['nameDesc'];
 					$statusId = $_POST['statusId'];
+
+					$positionId=($positionId<>""?$positionId:'0');		
 					
 					// Check user name duplication?
-					$sql = "SELECT id FROM `".$tb."` WHERE (name=:name) AND id<>:id ";
-					$stmt = $pdo->prepare($sql);	
+					$sql = "SELECT id FROM `".$tb."` WHERE (topicGroupId=:topicGroupId
+					 AND positionId=:positionId
+					 AND name=:name) 
+					 AND id<>:id ";
+					$stmt = $pdo->prepare($sql);	 
+					$stmt->bindParam(':topicGroupId', $topicGroupId);
+					$stmt->bindParam(':positionId', $positionId);
 					$stmt->bindParam(':name', $name);
 					$stmt->bindParam(':id', $id);
 					$stmt->execute();
@@ -61,16 +83,20 @@ $tb = 'eval_grade';
 					} 	   
 					
 					//Sql
-					$sql = "UPDATE `".$tb."` SET `ratio`=:ratio 
+					$sql = "UPDATE `".$tb."` SET `topicGroupId`=:topicGroupId 
+					, `positionId`=:positionId
 					, `name`=:name
+					, `nameDesc`=:nameDesc
 					, `statusId`=:statusId
 					, `updateTime`=NOW()
 					, `updateUserId`=:updateUserId
 					WHERE id=:id 
 					";	
 					$stmt = $pdo->prepare($sql);	
-					$stmt->bindParam(':ratio', $ratio);
+					$stmt->bindParam(':topicGroupId', $topicGroupId);
+					$stmt->bindParam(':positionId', $positionId);
 					$stmt->bindParam(':name', $name);
+					$stmt->bindParam(':nameDesc', $nameDesc);
 					$stmt->bindParam(':statusId', $statusId);
 					$stmt->bindParam(':updateUserId', $s_userId);
 					$stmt->bindParam(':id', $id);
@@ -168,7 +194,9 @@ $tb = 'eval_grade';
 					echo json_encode(array('success' => false, 'message' => $errors));
 				}
 				break;
-				
+
+			
+
 			default : 
 				header('Content-Type: application/json');
 				echo json_encode(array('success' => false, 'message' => 'Unknow action.'));				

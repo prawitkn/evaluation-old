@@ -33,7 +33,7 @@
     
     <?php switch($s_userGroupCode){  case 1 : ?>
 		<li class="header">เจ้าหน้าที่ดูแลระบบ</li>		
-		<li><a href="User.php?"><i class="fa fa-user"></i> <span>User</span></a></li>	
+		<li><a href="user_list.php?"><i class="fa fa-user"></i> <span>User</span></a></li>	
 		<li><a href="userGroup.php?"><i class="fa fa-users"></i> <span>User Group</span></a></li>	
     <li><a href="Config.php?"><i class="fa fa-cog"></i> <span>Config</span></a></li> 
     <?php break; ?>

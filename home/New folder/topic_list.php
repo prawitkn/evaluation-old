@@ -98,9 +98,9 @@
         </div><!-- /.box-tools -->
         </div><!-- /.box-header -->
         <div class="box-body">
-			<div class="row">								
+			<div class="row col-md-12">				
 				<form id="form1" action="<?=$rootPage;?>_list.php" method="get" class="form" novalidate>
-					<div class="col-md-3">
+					<div class="col-md-2">
 						<div class="form-group">
 	                        <label for="topicGroupId">กลุ่ม หัวข้อประเมิน</label>
 							<select id="topicGroupId" name="topicGroupId" class="form-control"  data-smk-msg="จำเป็น" required>
@@ -122,37 +122,23 @@
 
 					<div class="col-md-2">
 						<div class="form-group">
-	                        <label for="positionGroupId">กลุ่ม ตำแหน่ง</label>
-							<select id="positionGroupId" name="positionGroupId" class="form-control" >
-								<option value="">--ทั้งหมด--</option>
-								<?php
-								$sql = "SELECT `id`, `code`, `name`, `statusId`  FROM `eval_position_group` WHERE StatusId=1 ";		
-								$stmt = $pdo->prepare($sql);		
-								$stmt->execute();
-								while($itm = $stmt->fetch()){
-									$selected=( $positionGroupId==$itm['id'] ? ' selected ' : '' );
-									echo '<option value="'.$itm['id'].'" '.$selected.'
-										 >'.$itm['name'].'</option>';
-								}
-								?>
-							</select>
-	                    </div>		                    
-					</div>
-					<!--/.col-md-->
-
-					<div class="col-md-2">
-						<div class="form-group">
 	                        <label for="positionId">ตำแหน่ง</label>
 							<select id="positionId" name="positionId" class="form-control" >
 								<option value="">--ทั้งหมด--</option>
 								<?php
-								$sql = "SELECT `id`, `code`, `name`, `statusId`  FROM `eval_position` WHERE StatusId=1 ";		
+								$sql = "SELECT pos.`id`, pos.`code`, pos.`name`, pos.`statusId`  
+								, sec.name as sectionName 
+								FROM `eval_position` pos, eval_section sec 
+								WHERE pos.sectionId=sec.id 
+								AND pos.statusId=1 
+								ORDER BY sec.seqNo, pos.seqNo 
+								";		
 								$stmt = $pdo->prepare($sql);		
 								$stmt->execute();
 								while($itm = $stmt->fetch()){
 									$selected=( $positionId==$itm['id'] ? ' selected ' : '' );
 									echo '<option value="'.$itm['id'].'" '.$selected.'
-										 >'.$itm['name'].'</option>';
+										 >'.$itm['sectionName'].' - '.$itm['name'].'</option>';
 								}
 								?>
 							</select>
@@ -292,7 +278,7 @@
 			</form>
 			<!--/.form2-->
 			
-			<a href="#" name="btnSubmit" class="btn btn-primary" ><i class="fa fa-save"></i> อัพเดต ลำดับการแสดงข้อมูลทั้งหมด</a>
+			<a href="#" name="btnSubmit" class="btn btn-primary" ><i class="fa fa-save"></i> อัพเดต ลำดับการแสดงข้อมูลทั้งหมด ตามกลุ่มหัวข้อประเมินและตำแหน่ง</a>
 				
 			<nav>
 			<ul class="pagination">

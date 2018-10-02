@@ -13,8 +13,9 @@
 					
 					$sql = "SELECT hdr.Id 
 					FROM eval_term_person hdr
-					INNER JOIN eval_person ps ON ps.Id=hdr.personId ";
-					if( $sectionId <> "" ) { $sql .= "WHERE ps.sectionId=:sectionId "; }
+					INNER JOIN eval_person ps ON ps.id=hdr.personId 
+					WHERE hdr.termId=(SELECT id FROM eval_term WHERE isCurrent=1) ";
+					if( $sectionId <> "" ) { $sql .= "AND ps.sectionId=:sectionId "; }
 					$stmt = $pdo->prepare($sql);				
 					if( $sectionId <> "" ) { $stmt->bindParam(':sectionId', $sectionId); }
 					$stmt->execute();					
@@ -42,8 +43,9 @@
 					, st.name as sectionName 
 					FROM eval_term_person hdr
 					INNER JOIN eval_person ps ON ps.Id=hdr.personId 
-					INNER JOIN eval_section st ON st.id=ps.sectionId ";
-					if( $sectionId <> "" ) { $sql .= "WHERE ps.sectionId=:sectionId "; }
+					INNER JOIN eval_section st ON st.id=ps.sectionId 
+					WHERE hdr.termId=(SELECT id FROM eval_term WHERE isCurrent=1) ";
+					if( $sectionId <> "" ) { $sql .= "AND ps.sectionId=:sectionId "; }
 					$sql .= "ORDER BY hdr.id ASC ";
 					//$sql.="LIMIT $start, $rows ";
 					$stmt = $pdo->prepare($sql);					

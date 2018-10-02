@@ -30,9 +30,18 @@
    <?php include 'leftside.php'; ?>
 
    <?php
+   		$termId=( isset($_GET['termId']) ? $_GET['termId'] : '' );
    		$positionRankId=( isset($_GET['positionRankId']) ? $_GET['positionRankId'] : '' );
    		$sectionId=( isset($_GET['sectionId']) ? $_GET['sectionId'] : '' );
-
+   		
+   		$sql = "
+		SELECT * FROM eval_term WHERE isCurrent=1 
+		";
+        $stmt = $pdo->prepare($sql);
+		$stmt->execute();	
+		if($termId==''){			
+			$termId = $stmt->fetch()['id'];		
+		}
    ?>
 
   <!-- Content Wrapper. Contains page content -->
@@ -56,6 +65,8 @@
         <div class="box-header with-border">
         	<label class="box-tittle" style="font-size: 20px;"><i class="fa fa-list"></i> รายการผลการประเมิน</label>
 
+        	
+
 			<!--<a href="<?=$rootPage;?>_add.php?id=" class="btn btn-primary"><i class="fa fa-plus"></i> Add user group</a>-->
 		
 		
@@ -72,11 +83,12 @@
 				LEFT JOIN eval_grade_rank gr ON gr.id=hdr.gradeRankId 
 				WHERE 1=1 ";
 				if($positionRankId<>""){ $sql .= "AND pos.positionRankId=:positionRankId "; }
-				if($sectionId<>""){ $sql .= "AND pos.sectionId=:sectionId "; }
+				if($sectionId<>""){ $sql .= "AND pos.sectionId=:sectionId "; }		
 
-				$sql .= "AND hdr.termId=(SELECT id FROM eval_term WHERE isCurrent=1) ";
+				$sql .= "AND hdr.termId=:termId ";
 				//echo $sql;
                 $stmt = $pdo->prepare($sql);	
+                $stmt->bindParam(':termId', $termId); 
                 if($positionRankId<>""){ $stmt->bindParam(':positionRankId', $positionRankId); }
                 if($sectionId<>""){ $stmt->bindParam(':sectionId', $sectionId); }
 				$stmt->execute();	
@@ -98,6 +110,22 @@
         <div class="box-body">
 			<div class="row col-md-12">				
 				<form id="form1" action="<?=$rootPage;?>.php" method="get" class="form" novalidate>
+			
+				<div class="col-md-2">					
+					<label for="termId">ห้วงเวลาประเมิน</label>
+					<select name="termId" id="termId" class="form form-control">
+						<?php
+							$sql = "SELECT `id`, `seqNo`, CONCAT(`term`, '/',`year`) AS name FROM eval_term ORDER BY isCurrent DESC, seqNo, id ";
+							$stmt = $pdo->prepare($sql);
+							$stmt->execute();	
+							While ( $itm = $stmt->fetch() ){
+								$selected=($termId==$itm['id']?' selected ':'');
+								echo '<option value="'.$itm['id'].'" '.$selected.' >'.$itm['name'].'</option>';
+							}
+						?>
+					</select>
+				</div>  
+				<!--/.col-md-->
 
 				<div class="col-md-3">					
 					<label for="positionRankId">ระดับ ตำแหน่ง </label>
@@ -174,8 +202,8 @@
 				INNER JOIN eval_section sec ON sec.id=pos.sectionId
 				LEFT JOIN eval_grade_rank gr ON gr.id=hdr.gradeRankId
 				WHERE 1=1 
-				";
-				$sql .= "AND hdr.termId=(SELECT id FROM eval_term WHERE isCurrent=1) ";
+				";				
+				$sql .= "AND hdr.termId=:termId ";
 				if(isset($_GET['search_word']) and isset($_GET['search_word'])){
 					$search_word=$_GET['search_word'];
 					$sql .= "and (hdr.userFullname like '%".$_GET['search_word']."%' ) ";
@@ -186,8 +214,9 @@
 
 				$sql .= "ORDER BY hdr.score DESC ";
 				$sql .= "LIMIT $start, $rows ";		
-                //echo $sql;
-				$stmt = $pdo->prepare($sql);
+				//echo $sql;
+                $stmt = $pdo->prepare($sql);	
+                $stmt->bindParam(':termId', $termId); 
 				if( $positionRankId <> "" ) { $stmt->bindParam(':positionRankId', $positionRankId); }
 				if( $sectionId <> "" ) { $stmt->bindParam(':sectionId', $sectionId); }	
 				$stmt->execute();	                
