@@ -77,22 +77,24 @@
 
 					//Update score by ratio
 					$sql = "
-					UPDATE eval_result_detail hdr
-					INNER JOIN eval_data dt ON dt.id=hdr.subjectId 
-					SET hdr.scoreByRatio=ROUND(hdr.score*dt.topicGroupRatio/100,2)
-					WHERE hdr.id IN (".$arrItmId.")
+					UPDATE eval_result_detail dt
+					INNER JOIN eval_result hd ON hd.id=dt.hdrId 
+					INNER JOIN eval_data dat ON dat.id=dt.subjectId 
+					SET dt.scoreByRatio=ROUND(dt.score*dat.topicGroupRatio/100,2)
+					WHERE hd.id=:id 
 					";		
 					$stmt = $pdo->prepare($sql);
+					$stmt->bindParam(':id', $hdrId);
 					$stmt->execute();			
 
 					//Re-sum total score
 					$sql = "
 					UPDATE eval_result hdr 
-					,(SELECT xh.id, SUM(xd.scoreByRatio) sumScore 
+					,(SELECT xh.id, SUM(xd.scoreByRatio) sumScore , count(*) as countTotal 
 						FROM eval_result xh 
 						INNER JOIN eval_result_detail xd ON xd.hdrId=xh.id 
 						GROUP BY xh.id) AS xx
-					SET hdr.score=xx.sumScore 
+					SET hdr.score=xx.sumScore/xx.countTotal 
 					WHERE hdr.id=xx.id 
 					AND hdr.id=:id  
 					";		
@@ -155,7 +157,7 @@
 					$pdo->commit();
 					
 					header('Content-Type: application/json');
-					echo json_encode(array('success' => 'success', 'message' => 'Data Inserted Complete.', 'id' => $hdrId));
+					echo json_encode(array('success' => 'success', 'message' => 'Data Inserted Complete.', 'id' => $termPersonId));
 				} 
 				//Our catch block will handle any exceptions that are thrown.
 				catch(Exception $e){

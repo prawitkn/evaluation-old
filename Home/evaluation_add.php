@@ -291,9 +291,8 @@ $(document).ready(function() {
 					text: data.message,
 					type: data.status,
 					position:'top-center'
-				});
-				
-				window.location.href = '<?=$rootPage;?>.php?tpId=<?=$termPersonId;?>&tgId=<?=$topicGroupId;?>';
+				});				
+				history.go(-1);
 			} else {
 				alert(data.message);
 				$.smkAlert({

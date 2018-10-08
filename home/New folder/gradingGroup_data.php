@@ -2,7 +2,7 @@
   include ("session.php");
 	//Check user roll.
 	switch($s_userGroupCode){
-		case 1 : case 3 :   
+		case 1 :  case 3 :
 			break;
 		default : 
 			header('Location: access_denied.php');
@@ -12,22 +12,19 @@
 ?>
 
 <?php 
-	$rootPage = 'topic';
-	$tb = 'eval_topic';
+	$rootPage = 'gradingGroup';
+	$tb = 'eval_grading_group';
 
 	$id=( isset( $_GET['id'] ) ? $_GET['id'] : '' );
 	//query 
-	$sql = "SELECT `id`, `topicGroupId`, `positionGroupId`, `positionId`, `seqNo`, `name`, `nameDesc`, `statusId` FROM ".$tb." WHERE id=:id ";
+	$sql = "SELECT `id`, `seqNo`, `name`, `statusId` FROM ".$tb." WHERE id=:id ";
     $stmt = $pdo->prepare($sql);	
     $stmt->bindParam(':id', $id);
 	$stmt->execute();	//echo $sql;
 	$row = $stmt->fetch();
-	$topicGroupId=$row['topicGroupId'];
-	$positionGroupId=$row['positionGroupId'];
-	$positionId=$row['positionId'];
 ?>	
 </head>
-<body class="hold-transition skin-yellow sidebar-mini sidebar-collapse">    
+<body class="hold-transition skin-yellow sidebar-mini ">    
 
 <div class="wrapper">
 
@@ -42,14 +39,14 @@
     <!-- Content Header (Page header) -->
    <section class="content-header">
 		<h1><i class="fa fa-th-list"></i>
-       หัวข้อการประเมิน
+       กลุ่มการตัดเกรด
         <small>การจัดการข้อมูลหลัก</small>
       </h1>
 
 
       <ol class="breadcrumb">
        <li><a href="index.php"><i class="fa fa-home"></i>หน้าแรก</a></li>
-       <li><a href="<?=$rootPage;?>_list.php"><i class="fa fa-list"></i>รายการ หัวข้อการประเมิน</a></li>
+       <li><a href="<?=$rootPage;?>_list.php"><i class="fa fa-list"></i>รายการ กลุ่มการตัดเกรด</a></li>
       </ol>
     </section>
    
@@ -60,9 +57,9 @@
     <div class="box box-primary">
         <div class="box-header with-border">
         <?php if ( $id=="" ) { ?>
-        	<h3 class="box-title">เพิ่ม หัวข้อการประเมิน</h3>
+        	<h3 class="box-title">เพิ่ม กลุ่มการตัดเกรด</h3>
     	<?php }else{ ?>
-    		 <h3 class="box-title">แก้ไข หัวข้อการประเมิน <span style="color: blue;"><?php echo $id.' : '.$row['name']; ?></span></h3>
+    		 <h3 class="box-title">แก้ไข กลุ่มการตัดเกรด <span style="color: blue;"><?php echo $id.' : '.$row['name']; ?></span></h3>
     	<?php } //.if id==0 ?>
 
 
@@ -79,68 +76,23 @@
     				<input type="hidden" name="id" value="<?=$id;?>" />
 
 				
-				<div class="row">					
-					<div class="col-md-3">
-						<div class="form-group">
-	                        <label for="topicGroupId">กลุ่ม หัวข้อประเมิน</label>
-							<select id="topicGroupId" name="topicGroupId" class="form-control"  data-smk-msg="จำเป็น" required>
-								<?php
-								$sql = "SELECT `id`, `code`, `name`, `statusId`  FROM `eval_topic_group` WHERE StatusId=1 ";		
-								$stmt = $pdo->prepare($sql);		
-								$stmt->execute();
-								while($itm = $stmt->fetch()){
-									$selected=( $topicGroupId==$itm['id'] ? ' selected ' : '' );
-									echo '<option value="'.$itm['id'].'" '.$selected.'
-										 >'.$itm['name'].'</option>';
-								}
-								?>
-							</select>
-	                    </div>		                    
+				<div class="row">
+					<!--
+					<div class="col-md-3">					
+	                    <div class="form-group">
+	                        <label for="code">Sale Delivery Type Code</label>
+	                        <input id="code" type="text" class="form-control" name="code" data-smk-msg="Require user group code."required>
+	                    </div>
 					</div>
+				-->
 					<!--/.col-md-->
 
-					<div class="col-md-2">
+					<div class="col-md-6">
 						<div class="form-group">
-	                        <label for="positionGroupId">กลุ่ม ตำแหน่ง</label>
-							<select id="positionGroupId" name="positionGroupId" class="form-control" >
-								<option value="">--ทั้งหมด--</option>
-								<?php
-								$sql = "SELECT `id`, `code`, `name`, `statusId`  FROM `eval_position_group` WHERE StatusId=1 ";		
-								$stmt = $pdo->prepare($sql);		
-								$stmt->execute();
-								while($itm = $stmt->fetch()){
-									$selected=( $positionGroupId==$itm['id'] ? ' selected ' : '' );
-									echo '<option value="'.$itm['id'].'" '.$selected.'
-										 >'.$itm['name'].'</option>';
-								}
-								?>
-							</select>
-	                    </div>		                    
-					</div>
-					<!--/.col-md-->
-
-					<div class="col-md-3">
-						<div class="form-group">
-	                        <label for="positionId">ตำแหน่ง</label>
-							<select id="positionId" name="positionId" class="form-control" >
-								<option value="">--ทั้งหมด--</option>
-								<?php
-								$sql = "SELECT hd.`id`, hd.`code`, hd.`name`, hd.`statusId`  
-								, sec.name as sectionName 
-								FROM `eval_position` hd 
-								INNER JOIN eval_section sec ON sec.id=hd.sectionId 
-								WHERE hd.statusId=1 ";		
-								$sql .= "ORDER BY hd.sectionId, hd.name ";
-								$stmt = $pdo->prepare($sql);		
-								$stmt->execute();
-								while($itm = $stmt->fetch()){
-									$selected=( $positionId==$itm['id'] ? ' selected ' : '' );
-									echo '<option value="'.$itm['id'].'" '.$selected.'
-										 >'.$itm['sectionName'].' => '.$itm['name'].'</option>';
-								}
-								?>
-							</select>
-	                    </div>		                    
+	                        <label for="name">กลุ่มการตัดเกรด</label>
+	                        <input id="name" type="text" class="form-control" name="name" value="<?=$row['name'];?>" data-smk-msg="จำเป็น" required>
+	                    </div>	
+	                    
 					</div>
 					<!--/.col-md-->
 
@@ -153,34 +105,8 @@
 	                   <!--form-group-->	                    
 					</div>
 					<!--/.col-md-->
-
-				</div>
-				<!--row-->
-
-				<div class="row">
-					<div class="col-md-5">
-						<div class="form-group">
-	                        <label for="name">หัวข้อการประเมิน</label>
-
-							<textarea name="name" class="form-control"  data-smk-msg="จำเป็น" required ><?=$row['name'];?></textarea>
-	                    </div>	
-	                    
-					</div>
-					<!--/.col-md-->
-
-					<div class="col-md-5">
-						<div class="form-group">
-	                        <label for="nameDesc">เป้าหมาย/คำอธิบาย</label>
-
-							<textarea name="nameDesc" class="form-control"  data-smk-msg="จำเป็น" required ><?=$row['nameDesc'];?></textarea>
-	                    </div>	
-	                    
-					</div>
-					<!--/.col-md-->
-					
 				</div>
 				<!--/.row-->	
-				
 
 				<div class="row col-md-12">
 					<button id="btnSubmit" type="submit" class="btn btn-default"><i class="fa fa-save"> บันทึก</i></button>

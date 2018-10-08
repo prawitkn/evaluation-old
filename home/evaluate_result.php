@@ -31,7 +31,7 @@
 
    <?php
    		$termId=( isset($_GET['termId']) ? $_GET['termId'] : '' );
-   		$positionRankId=( isset($_GET['positionRankId']) ? $_GET['positionRankId'] : '' );
+   		$gradingGroupId=( isset($_GET['gradingGroupId']) ? $_GET['gradingGroupId'] : '' );
    		$sectionId=( isset($_GET['sectionId']) ? $_GET['sectionId'] : '' );
    		
    		$sql = "
@@ -82,14 +82,14 @@
 				INNER JOIN eval_section sec ON sec.id=pos.sectionId
 				LEFT JOIN eval_grade_rank gr ON gr.id=hdr.gradeRankId 
 				WHERE 1=1 ";
-				if($positionRankId<>""){ $sql .= "AND pos.positionRankId=:positionRankId "; }
+				if($gradingGroupId<>""){ $sql .= "AND ps.gradingGroupId=:gradingGroupId "; }
 				if($sectionId<>""){ $sql .= "AND pos.sectionId=:sectionId "; }		
 
 				$sql .= "AND hdr.termId=:termId ";
 				//echo $sql;
                 $stmt = $pdo->prepare($sql);	
                 $stmt->bindParam(':termId', $termId); 
-                if($positionRankId<>""){ $stmt->bindParam(':positionRankId', $positionRankId); }
+                if($gradingGroupId<>""){ $stmt->bindParam(':gradingGroupId', $gradingGroupId); }
                 if($sectionId<>""){ $stmt->bindParam(':sectionId', $sectionId); }
 				$stmt->execute();	
 				$countTotal = $stmt->fetch()['countTotal'];			
@@ -125,25 +125,7 @@
 						?>
 					</select>
 				</div>  
-				<!--/.col-md-->
-
-				<div class="col-md-3">					
-					<label for="positionRankId">ระดับ ตำแหน่ง </label>
-					<select name="positionRankId" id="positionRankId" class="form form-control">
-						<option value="">--ทั้งหมด--</option>
-						<?php
-							$sql = "SELECT `id`, `seqNo`, `name` FROM eval_position_rank ORDER BY seqNo, id ";
-							$stmt = $pdo->prepare($sql);
-							$stmt->execute();	
-							While ( $itm = $stmt->fetch() ){
-								$selected=($positionRankId==$itm['id']?' selected ':'');
-								echo '<option value="'.$itm['id'].'" '.$selected.' >'.$itm['name'].'</option>';
-							}
-						?>
-					</select>
-				</div>  
-				<!--/.col-md-->
-
+			<!--/.col-md-->
 
 				<div class="col-md-3">					
 					<label for="sectionId">แผนก </label>
@@ -163,6 +145,22 @@
 				<!--/.col-md-->
 
 				
+				<div class="col-md-3">					
+					<label for="gradingGroupId">กลุ่มการตัดเกรด </label>
+					<select name="gradingGroupId" id="gradingGroupId" class="form form-control">
+						<option value="">--ทั้งหมด--</option>
+						<?php
+							$sql = "SELECT `id`, `seqNo`, `name` FROM eval_grading_group ORDER BY seqNo, id ";
+							$stmt = $pdo->prepare($sql);
+							$stmt->execute();	
+							While ( $itm = $stmt->fetch() ){
+								$selected=($gradingGroupId==$itm['id']?' selected ':'');
+								echo '<option value="'.$itm['id'].'" '.$selected.' >'.$itm['name'].'</option>';
+							}
+						?>
+					</select>
+				</div>  
+				<!--/.col-md-->
 
 				<div class="col-md-1">
 					<div class="form-group">
@@ -208,7 +206,7 @@
 					$search_word=$_GET['search_word'];
 					$sql .= "and (hdr.userFullname like '%".$_GET['search_word']."%' ) ";
 				}	
-				if( $positionRankId<>"" ){ $sql .= "AND pos.positionRankId=:positionRankId "; }
+				if( $gradingGroupId<>"" ){ $sql .= "AND ps.gradingGroupId=:gradingGroupId "; }
 				if( $sectionId <> "" ) { $sql .= "AND pos.sectionId=:sectionId "; }
 
 
@@ -217,7 +215,7 @@
 				//echo $sql;
                 $stmt = $pdo->prepare($sql);	
                 $stmt->bindParam(':termId', $termId); 
-				if( $positionRankId <> "" ) { $stmt->bindParam(':positionRankId', $positionRankId); }
+				if( $gradingGroupId <> "" ) { $stmt->bindParam(':gradingGroupId', $gradingGroupId); }
 				if( $sectionId <> "" ) { $stmt->bindParam(':sectionId', $sectionId); }	
 				$stmt->execute();	                
            ?> 
@@ -279,7 +277,7 @@
 						</select>
                     </td>
                     <td>
-                    	<a href="evaluate_view.php?tpId=<?=$row['id'];?>" class="btn btn-primary"><i fa fa-static></i> รายละเอียด</a>
+                    	<a href="evaluate_view.php?personId=<?=$row['personId'];?>&termId=<?=$termId;?>" class="btn btn-primary"><i fa fa-static></i> รายละเอียด</a>
                     </td>
                 </tr>
                 <?php $rowNo+=1; } ?>	
@@ -289,7 +287,7 @@
 			<!--/.form2-->
 			</div>
 
-			<?php $condQuery="?positionRankId=".$positionRankId."&sectionId=".$sectionId; ?>			
+			<?php $condQuery="?gradingGroupId=".$gradingGroupId."&sectionId=".$sectionId; ?>			
 			<div class="row col-md-12">		
 				<a href="<?=$rootPage;?>_xls.php<?=$condQuery;?>" class="btn btn-default pull-right"><i class="fa fa-print"></i> นำออก Excel</a>
 

@@ -23,27 +23,72 @@
    <?php include 'leftside.php'; ?>
 
    <?php
-   	$termPersonId=$_GET['tpId'];
-   	//$userEvaluatorPersonId=$_GET['epId'];
+   	//term sql
+	  $termId=( isset($_GET['termId']) ? $_GET['termId'] : '' );
 
-	/*$sql = "SELECT `Id`, `TermId`, `PersonId`, `EvaluatorPersonId`, `EvaluatorPersonId2`, `EvaluatorPersonId3` 
-	FROM `eval_term_person` 
-	WHERE Id=:Id 
-	";
-	$stmt = $pdo->prepare($sql);
-	$stmt->bindParam(':Id', $termPersonId);
-	$stmt->execute();
-	$row = $stmt->fetch();	
-	$TermId=$row['TermId'];
-	$PersonId=$row['PersonId'];
-	$EvaluatorPersonId=$row['EvaluatorPersonId'];
-	$EvaluatorPersonId2=$row['EvaluatorPersonId2'];
-	$EvaluatorPersonId3=$row['EvaluatorPersonId3'];
+	  $sql = "SELECT hdr.id 
+	  FROM eval_term hdr 
+	  WHERE 1=1 
+	  AND hdr.statusId=1 ";
+	  if( $termId<> "" ){ $sql .= "AND hdr.id=:id "; }
+	  $sql .= "ORDER BY hdr.isCurrent DESC, hdr.id DESC ";
+	  $sql .= "LIMIT 1 ";
 
-	$EvaluatorTotal=0;
-	if($EvaluatorPersonId<>0) $EvaluatorTotal+=1;
-	if($EvaluatorPersonId2<>0) $EvaluatorTotal+=1;
-	if($EvaluatorPersonId3<>0) $EvaluatorTotal+=1;*/
+	  $stmt = $pdo->prepare($sql);  
+	  if( $termId<> "" ){ $stmt->bindParam(':id', $termId); }      
+	  //echo $sql;
+	  $stmt->execute(); 
+	  $termId=$stmt->fetch()['id'];
+
+
+
+
+	  //personId 
+	  $personId=( isset($_GET['personId']) ? $_GET['personId'] : $s_personId );
+
+	  $evaluatorId=$s_personId; 
+	  
+	   $sql = "SELECT tp.id as termPersonId, CONCAT(t.term,'/',t.year) as termName, p.fullName as personFullName, p.positionId
+	 	,tp.evaluatorPersonId, tp.evaluatorPersonId2, tp.evaluatorPersonId3
+	 	,tp.score, tp.evaluatorTotal 
+		  , pos.name as positionName, pos.positionRankId, pos.sectionId 
+		  , sec.name as sectionName 
+		  FROM eval_term_person tp
+		  INNER JOIN eval_term t ON t.id=tp.termId 
+		  INNER JOIN eval_person p ON p.id=tp.personId 
+		  LEFT JOIN eval_position pos ON pos.id=p.positionId 
+		  LEFT JOIN eval_section sec ON sec.id=pos.sectionId	  	
+		  WHERE 1=1
+		   AND tp.termId=:termId 
+	 	 AND tp.personId=:personId
+		  ";
+
+		    $stmt = $pdo->prepare($sql);        
+		  $stmt->bindParam(':termId', $termId);
+		  $stmt->bindParam(':personId', $personId);
+		  $stmt->execute(); 
+		  $row=$stmt->fetch();
+
+		  $termPersonId=$row['termPersonId'];
+		  $evaluatorPersonId=$row['evaluatorPersonId'];
+		  $evaluatorPersonId2=$row['evaluatorPersonId2'];
+		  $evaluatorPersonId3=$row['evaluatorPersonId3'];
+
+		   $sql = "SELECT hd.id, hd.statusId 
+		  FROM eval_result hd 
+		  WHERE 1=1
+		   AND hd.termPersonId=:termPersonId 
+	 	 AND hd.evaluatorPersonId=:evaluatorPersonId
+		  ";
+
+		    $stm = $pdo->prepare($sql);        
+		  $stm->bindParam(':termPersonId', $termPersonId);
+		  $stm->bindParam(':evaluatorPersonId', $s_personId);
+		  $stm->execute(); 
+		  $r=$stm->fetch();
+
+		  $hdrId=$r['id'];
+		  $statusId=$r['statusId'];
    ?>
 
   <!-- Content Wrapper. Contains page content -->
@@ -62,60 +107,28 @@
     <!-- Main content -->
     <section class="content">
     	<?php
-    	 $sql = "SELECT tp.id as termPersonId, CONCAT(t.term,'/',t.year) as termName, p.fullName as personFullName, p.positionId
-    	 	,tp.evaluatorPersonId, tp.EvaluatorPersonId2, tp.evaluatorPersonId3
-    	 	,tp.score, tp.evaluatorTotal 
-			  , pos.name as positionName, pos.positionRankId, pos.sectionId 
-			  , sec.name as sectionName 
-			  , res.statusId 
-			  FROM eval_term_person tp
-			  INNER JOIN eval_term t ON t.id=tp.termId 
-			  INNER JOIN eval_person p ON p.id=tp.personId 
-			  LEFT JOIN eval_position pos ON pos.id=p.positionId 
-			  LEFT JOIN eval_section sec ON sec.id=pos.sectionId
-			  LEFT JOIN eval_result res ON res.termPersonId=tp.id AND
-			  	( res.EvaluatorPersonId=tp.personId OR  
-			  	res.evaluatorPersonId=tp.evaluatorPersonId OR 
-			  	res.evaluatorPersonId=tp.evaluatorPersonId2 OR 
-			  	res.evaluatorPersonId=tp.evaluatorPersonId3 )			  	
-			  WHERE 1=1
-			  AND tp.id=:id 
-			  ";
-
-			    $stmt = $pdo->prepare($sql);        
-			  $stmt->bindParam(':id', $termPersonId);
-			  $stmt->execute(); 
-			  $row=$stmt->fetch();
-
-			  $termPersonId=$row['termPersonId'];			
-			  $evaluatorPersonId=$row['evaluatorPersonId'];
-			  $evaluatorPersonId2=$row['evaluatorPersonId2'];
-			  $evaluatorPersonId3=$row['evaluatorPersonId3'];
-			  $statusId=$row['statusId'];
-			  //$scoreAvg=$row['score'];
-			 //$evaluatorTotal=$row['evaluatorTotal'];
 
 			$isScore1=true;
 			switch ($s_userGroupCode) {
-				case 2 :
+				case 1 : case 2 :
 					if ( $evaluatorPersonId != $s_personId  ) { $isScore1=false; } break;		
 				default: 	
 			}
 			$isScore2=true;
 			switch ($s_userGroupCode) {
-				case 2 :
+				case 1 : case 2 :
 					if ( $evaluatorPersonId2 != $s_personId  ) { $isScore2=false; } break;		
 				default: 	
 			}
 			$isScore3=true;
 			switch ($s_userGroupCode) {
-				case 2 :
+				case 1 : case 2 :
 					if ( $evaluatorPersonId3 != $s_personId  ) { $isScore3=false; } break;		
 				default: 	
 			}
 			$isScoreAvg=true;
 			switch ($s_userGroupCode) {
-				case 1 : break;		
+				case 3 : break;		
 				default: 	
 					$isScoreAvg=false; break;	
 			}
@@ -172,34 +185,7 @@
 	</ul>
 
   <div class="tab-content">
-    <!--<div id="home" class="tab-pane fade in active">
-	  <?php 
-
-		$sql = "SELECT `Id`, `Code`, `Fullname`, `StartDate`, `DeptName`, `PositionName` 
-		FROM `eval_person`
-		WHERE Id=:Id 
-		";
-		$stmt = $pdo->prepare($sql);
-		$stmt->bindParam(':Id', $PersonId);
-		$stmt->execute();
-		$row = $stmt->fetch();	
-
-		?>
-	  <div class="row col-md-12">
-		<div class="col-md-4">
-			<br/>
-			<img width="250" height="250" src="dist/img/<?php echo (empty($s_userPicture)? 'avatar5.png' : $s_userPicture) ?> " class="img-circle" alt="">
-		</div>
-		<div class="col-md-8">
-			<h3><?=$row['Code'].' : '.$row['Fullname'];?></h3>
-			<h3><?=$row['DeptName'];?></h3>
-			<h3><?=$row['PositionName'];?></h3>
-
-			<h3>Evaluator Person ID : <?=$s_personId;?></h3>
-		</div>
-	  </div>
-    </div>-->
-    <!--/.tab-pane-->
+   
 	
     <div id="menu1" class="tab-pane fade in active"> 
       <table class="table table-striped">
@@ -215,32 +201,37 @@
 		
 			</tr>		
 			<?php 
-			$sql = "SELECT `id`, `termPersonId`, `evalTypeId`, `evalTypeName`, `topicGroupId`, `topicGroupName`, `seqNo`, `topicId`, `topicName`
+			$sql = "SELECT `id`, `termPersonId`, `evalTypeId`, `evalTypeName`, `topicGroupId`, `topicGroupName`, `seqNo`, `topicId`, `topicName`, `topicDesc`
 				,IFNULL((SELECT rDtl.score 
 				FROM eval_result rHdr
 				INNER JOIN eval_result_detail rDtl ON rDtl.hdrId=rHdr.id 
 				INNER JOIN eval_term_person tp ON tp.id=rHdr.termPersonId AND tp.personId=rHdr.evaluatorPersonId 
 				WHERE rDtl.subjectId=t.id ),0) AS scoreOwn
+
 				,IFNULL((SELECT rDtl.score 
 				FROM eval_result rHdr
 				INNER JOIN eval_result_detail rDtl ON rDtl.hdrId=rHdr.id 
 				INNER JOIN eval_term_person tp ON tp.id=rHdr.termPersonId AND tp.evaluatorPersonId=rHdr.evaluatorPersonId 
 				WHERE rDtl.subjectId=t.id ),0) AS score1
+
 				,IFNULL((SELECT rDtl.score 
 				FROM eval_result rHdr
 				INNER JOIN eval_result_detail rDtl ON rDtl.hdrId=rHdr.id 
 				INNER JOIN eval_term_person tp ON tp.id=rHdr.termPersonId AND tp.evaluatorPersonId2=rHdr.evaluatorPersonId 
 				WHERE rDtl.subjectId=t.id ),0) AS score2
+
 				,IFNULL((SELECT rDtl.score 
 				FROM eval_result rHdr
 				INNER JOIN eval_result_detail rDtl ON rDtl.hdrId=rHdr.id 
 				INNER JOIN eval_term_person tp ON tp.id=rHdr.termPersonId AND tp.evaluatorPersonId3=rHdr.evaluatorPersonId 
 				WHERE rDtl.subjectId=t.id ),0) AS score3
+
 				,(SELECT IF(COUNT(rHdr.id)=0,1,COUNT(*)) 
 				FROM eval_result rHdr
 				INNER JOIN eval_result_detail rDtl ON rDtl.hdrId=rHdr.id 
 				INNER JOIN eval_term_person tp ON tp.id=rHdr.termPersonId AND tp.personId<>rHdr.evaluatorPersonId 
 				WHERE rDtl.subjectId=t.id ) AS evaluatorTotal
+
 			FROM `eval_data` t 
 			WHERE t.topicGroupId=1 
 			AND t.termPersonId=:termPersonId
@@ -257,6 +248,9 @@
 				</td>	
 				<td>
 					 <?= $row['topicName']; ?>
+				</td>	
+				<td>
+					 <?= $row['topicDesc']; ?>
 				</td>				
 				<td style="text-align: right;">
 					 <?= $row['scoreOwn']; ?>
@@ -498,25 +492,31 @@
 		
 			</tr>		
 			<?php 
-			$sql = "SELECT t.remark as remarkOwn, r2.remark as remark1, r3.remark as remark2, r4.remark as remark3 
-			FROM `eval_result` t 
-            LEFT JOIN eval_term_person tp ON tp.id=t.termPersonId AND t.evaluatorPersonId=tp.personId 
-			LEFT JOIN eval_result r2 ON r2.id=t.Id AND r2.evaluatorPersonId=t.evaluatorPersonId 
-			LEFT JOIN eval_result r3 ON r3.Id=t.id AND r3.evaluatorPersonId=t.evaluatorPersonId 
-			LEFT JOIN eval_result r4 ON r4.Id=t.id AND r4.evaluatorPersonId=t.evaluatorPersonId
-			WHERE t.termPersonId=:termPersonId
+			$sql = "
+			SELECT hd.id
+			,(SELECT x.remark FROM eval_result x WHERE x.termPersonId=hd.id AND x.evaluatorPersonId=hd.personId ) as remarkOwn
+			,(SELECT x.remark FROM eval_result x WHERE x.termPersonId=hd.id AND x.evaluatorPersonId=hd.evaluatorPersonId ) as remark1
+			,(SELECT x.remark FROM eval_result x WHERE x.termPersonId=hd.id AND x.evaluatorPersonId=hd.evaluatorPersonId2 ) as remark2
+			,(SELECT x.remark FROM eval_result x WHERE x.termPersonId=hd.id AND x.evaluatorPersonId=hd.evaluatorPersonId3 ) as remark3
+			
+			FROM eval_term_person hd 
+			WHERE hd.id=:termPersonId 
 			";
 			$stmt = $pdo->prepare($sql);
 			$stmt->bindParam(':termPersonId', $termPersonId);
+			//$stmt->bindParam(':evaluatorPersonId', $evaluatorId);
+
+
+		
 			$stmt->execute();
 			$rowNo=1; while ($row = $stmt->fetch() ) { 			
 			?>
 			<tr>
 				<td>
-					 <?= $rowNo; ?>
+					
 				</td>	
 				<td>
-					 <?= $row['topicName']; ?>
+					
 				</td>				
 				<td>
 					 <?= $row['remarkOwn']; ?>

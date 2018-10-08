@@ -27,75 +27,58 @@
 
 	  $sql = "SELECT hdr.id 
 	  FROM eval_term hdr 
-	  WHERE 1=1 ";
+	  WHERE 1=1 
+	  AND hdr.statusId=1 ";
 	  if( $termId<> "" ){ $sql .= "AND hdr.id=:id "; }
 	  $sql .= "ORDER BY hdr.isCurrent DESC, hdr.id DESC ";
 	  $sql .= "LIMIT 1 ";
 
 	  $stmt = $pdo->prepare($sql);  
 	  if( $termId<> "" ){ $stmt->bindParam(':id', $termId); }      
-	  
+	  //echo $sql;
 	  $stmt->execute(); 
 	  $termId=$stmt->fetch()['id'];
+
+
 
 
 	  //personId 
 	  $personId=( isset($_GET['personId']) ? $_GET['personId'] : $s_personId );
 
-	    //get eval data
-	  $sql = "SELECT tp.id as termPersonId, CONCAT(t.term,'/',t.year) as termName, p.fullName as personFullName, p.positionId
-	  , pos.name as positionName, pos.positionRankId, pos.sectionId 
-	  , sec.name as sectionName 
-	  FROM eval_term_person tp
-	  INNER JOIN eval_term t ON t.id=tp.termId 
-	  INNER JOIN eval_person p ON p.id=tp.personId 
-	  LEFT JOIN eval_position pos ON pos.id=p.positionId 
-	  LEFT JOIN eval_section sec ON sec.id=pos.sectionId
-	  WHERE 1=1
-	  AND tp.termId=:termId 
-	  AND tp.personId=:personId ";
+	  $evaluatorId=$s_personId; 
 
-	    $stmt = $pdo->prepare($sql);        
-	  $stmt->bindParam(':termId', $termId);
-	  $stmt->bindParam(':personId', $personId);
-	  $stmt->execute(); 
-	  $row=$stmt->fetch();
-
-	  $termPersonId=$row['termPersonId'];
-
-   	//$userEvaluatorPersonId=$_GET['epId'];
-   	$arrItmId = array();
-
- $sql = "SELECT tp.id as termPersonId, CONCAT(t.term,'/',t.year) as termName, p.fullName as personFullName, p.positionId
+	   $sql = "SELECT tp.id as termPersonId, CONCAT(t.term,'/',t.year) as termName, p.fullName as personFullName, p.positionId
 	 	,tp.evaluatorPersonId, tp.EvaluatorPersonId2, tp.evaluatorPersonId3
 	 	,tp.score, tp.evaluatorTotal 
 		  , pos.name as positionName, pos.positionRankId, pos.sectionId 
 		  , sec.name as sectionName 
-		  , res.statusId 
 		  FROM eval_term_person tp
 		  INNER JOIN eval_term t ON t.id=tp.termId 
 		  INNER JOIN eval_person p ON p.id=tp.personId 
 		  LEFT JOIN eval_position pos ON pos.id=p.positionId 
-		  LEFT JOIN eval_section sec ON sec.id=pos.sectionId
-		  LEFT JOIN eval_result res ON res.termPersonId=tp.id AND
-		  	( res.EvaluatorPersonId=tp.personId OR  
-		  	res.evaluatorPersonId=tp.evaluatorPersonId OR 
-		  	res.evaluatorPersonId=tp.evaluatorPersonId2 OR 
-		  	res.evaluatorPersonId=tp.evaluatorPersonId3 )			  	
+		  LEFT JOIN eval_section sec ON sec.id=pos.sectionId	  	
 		  WHERE 1=1
-		  AND tp.id=:id 
+		   AND tp.termId=:termId 
+	 	 AND tp.personId=:personId
 		  ";
 
 		    $stmt = $pdo->prepare($sql);        
-		  $stmt->bindParam(':id', $termPersonId);
+		  $stmt->bindParam(':termId', $termId);
+		  $stmt->bindParam(':personId', $personId);
 		  $stmt->execute(); 
 		  $row=$stmt->fetch();
 
-		  $termPersonId=$row['termPersonId'];			
-		  $evaluatorPersonId=$row['evaluatorPersonId'];
-		  $evaluatorPersonId2=$row['evaluatorPersonId2'];
-		  $evaluatorPersonId3=$row['evaluatorPersonId3'];
-		  $statusId=$row['statusId'];
+		  $termPersonId=$row['termPersonId'];
+
+
+	   
+   	//$userEvaluatorPersonId=$_GET['epId'];
+   //	$arrItmId = array();
+
+ 
+		  //$statusId=$row['statusId'];
+
+
 
    ?>
 
@@ -122,7 +105,7 @@
 
         	</label>
 
-        	<label style="font-size: 22px; color: blue;" id="evaluateFullName"><?=$row['personFullName'];?></label> / <?=$row['positionName'];?>
+        	<label style="font-size: 22px; color: blue;" id="evaluateFullName"><?=$row['personFullName'];?></label> / <?=$row['positionName'].' '.$row['sectionName'];?>
 
 			<!--<a href="<?=$rootPage;?>_add.php?id=" class="btn btn-primary"><i class="fa fa-plus"></i> Add user group</a>-->
 		
@@ -137,7 +120,32 @@
         <!-- /.box-header -->
 
         <div class="box-body">
-        	
+        	<?php //echo 'aaaaabc'.$termPersonId; 
+        	$sql = "SELECT tp.id as termPersonId, CONCAT(t.term,'/',t.year) as termName, p.fullName as personFullName, p.positionId
+	 	,tp.evaluatorPersonId, tp.EvaluatorPersonId2, tp.evaluatorPersonId3
+	 	,tp.score, tp.evaluatorTotal 
+		  , pos.name as positionName, pos.positionRankId, pos.sectionId 
+		  , sec.name as sectionName 
+		  FROM eval_term_person tp
+		  INNER JOIN eval_term t ON t.id=tp.termId 
+		  INNER JOIN eval_person p ON p.id=tp.personId 
+		  LEFT JOIN eval_position pos ON pos.id=p.positionId 
+		  LEFT JOIN eval_section sec ON sec.id=pos.sectionId	  	
+		  WHERE 1=1
+		  AND tp.id=:termPersonId 
+		  ";
+
+		    $stmt = $pdo->prepare($sql);        
+		  $stmt->bindParam(':termPersonId', $termPersonId);
+		  $stmt->execute(); 
+		  $row=$stmt->fetch();
+
+		  $termPersonId=$row['termPersonId'];			
+		  $evaluatorPersonId=$row['evaluatorPersonId'];
+		  $evaluatorPersonId2=$row['evaluatorPersonId2'];
+		  $evaluatorPersonId3=$row['evaluatorPersonId3'];
+
+?>
 
 			
 			
@@ -154,76 +162,52 @@
 	</ul>
 
   <div class="tab-content">
-    <!--<div id="home" class="tab-pane fade in active">
-	  <?php 
-
-		$sql = "SELECT `Id`, `Code`, `Fullname`, `StartDate`, `DeptName`, `PositionName` 
-		FROM `eval_person`
-		WHERE Id=:Id 
-		";
-		$stmt = $pdo->prepare($sql);
-		$stmt->bindParam(':Id', $PersonId);
-		$stmt->execute();
-		$row = $stmt->fetch();	
-
-		?>
-	  <div class="row col-md-12">
-		<div class="col-md-4">
-			<br/>
-			<img width="250" height="250" src="dist/img/<?php echo (empty($s_userPicture)? 'avatar5.png' : $s_userPicture) ?> " class="img-circle" alt="">
-		</div>
-		<div class="col-md-8">
-			<h3><?=$row['Code'].' : '.$row['Fullname'];?></h3>
-			<h3><?=$row['DeptName'];?></h3>
-			<h3><?=$row['PositionName'];?></h3>
-
-			<h3>Evaluator Person ID : <?=$s_personId;?></h3>
-		</div>
-	  </div>
-    </div>-->
-    <!--/.tab-pane-->
-	
+    
     <div id="menu1" class="tab-pane fade in active">
     <form id="form1" action="#" method="post" class="form form-inline" validate >
     	<input type="hidden" name="action" value="evalSubmit" />
-			<input type="hidden" name="termPersonId" value="<?=$termPersonId;?>" />
+		<input type="hidden" name="termPersonId" value="<?=$termPersonId;?>" />
 
       <table class="table table-striped">
 			<tr>
 				<th>ลำดับ</th>
-				<th>หัวข้อการประเมิน</th>
-				<th style="width: 80px;">ระดับ 1</th>	
-				<th style="width: 80px;">ระดับ 2</th>
-				<th style="width: 80px;">ระดับ 3</th>
-				<th style="width: 80px;">ระดับ 4</th>
-				<th style="width: 80px;">ระดับ 5</th>	
-				<th style="width: 100px;">คะแนนที่ได้ 0 - 100</th>	
+				<th>หัวข้อการประเมิน</th>				
+				<th>คำอธิบาย</th>
+				<th style="width: 80px; text-align: center;">ระดับ 1 0-60</th>	
+				<th style="width: 80px; text-align: center;">ระดับ 2 61-70</th>
+				<th style="width: 80px; text-align: center;">ระดับ 3 71-80</th>
+				<th style="width: 80px; text-align: center;">ระดับ 4 81-90</th>
+				<th style="width: 80px; text-align: center;">ระดับ 5 91-100</th>	
+				<th style="width: 100px; text-align: center;">คะแนนที่ได้ 0 - 100</th>	
 			</tr>		
 			<?php 
 			$arrItmId = array();
-
 			$sql = "SELECT t.`id`, t.`termPersonId`, t.`evalTypeId`, t.`evalTypeName`, t.`topicGroupId`, t.`topicGroupName`, t.`seqNo`, t.`topicId`, t.`topicName`
-			, rd.score 
+			, (SELECT rd.score FROM eval_result rh 
+						INNER JOIN eval_result_detail rd ON rd.hdrId=rh.id 
+						WHERE rh.termPersonId=t.termPersonId 
+						AND rd.subjectId=t.id 						
+						AND rh.evaluatorPersonId=:evaluatorPersonId) as score 
 			FROM `eval_data` t 
-			LEFT JOIN eval_result rh ON rh.termPersonId=t.termPersonId 
-			LEFT JOIN eval_result_detail rd ON rd.hdrId=rh.id AND rd.subjectId=t.id 
-			WHERE t.topicGroupId=1 
+			WHERE t.topicGroupId=1
 			AND t.termPersonId=:termPersonId
 			ORDER BY t.seqNo 
-			";
+			"; 
 			$stmt = $pdo->prepare($sql);
 			$stmt->bindParam(':termPersonId', $termPersonId);
+			$stmt->bindParam(':evaluatorPersonId', $evaluatorId);
 			$stmt->execute();
 			$rowNo=1; while ($row = $stmt->fetch() ) { 			
 			?>
 			<tr>
 				<td><?= $rowNo; ?></td>	
-				<td><?= $row['topicName']; ?></td>				
-				<td>0 - 60</td>			
-				<td>61 - 70</td>			
-				<td>71 - 80</td>			
-				<td>81 - 90</td>			
-				<td>90 - 100</td>				
+				<td><?= $row['topicName']; ?></td>	
+				<td><?= $row['topicDesc']; ?></td>				
+				<td> </td>			
+				<td> </td>			
+				<td> </td>			
+				<td> </td>			
+				<td> </td>				
 				<td>
 					 <input type="text" name="<?=$row['id'];?>" class="form-control" style="width: 80px; text-align: right;" value="<?=$row['score'];?>" data-skm-msg="จำเป็น" required />
 				</td>
@@ -252,39 +236,44 @@
       <table class="table table-striped">
 			<tr>
 				<th>ลำดับ</th>
-				<th>หัวข้อการประเมิน</th>
-				<th style="width: 80px;">ระดับ 1</th>	
-				<th style="width: 80px;">ระดับ 2</th>
-				<th style="width: 80px;">ระดับ 3</th>
-				<th style="width: 80px;">ระดับ 4</th>
-				<th style="width: 80px;">ระดับ 5</th>	
-				<th style="width: 80px; text-align: right;">คะแนนที่ได้ 0 - 100</th>	
+				<th>หัวข้อการประเมิน</th>				
+				<th>คำอธิบาย</th>
+				<th style="width: 80px; text-align: center;">ระดับ 1 0-60</th>	
+				<th style="width: 80px; text-align: center;">ระดับ 2 61-70</th>
+				<th style="width: 80px; text-align: center;">ระดับ 3 71-80</th>
+				<th style="width: 80px; text-align: center;">ระดับ 4 81-90</th>
+				<th style="width: 80px; text-align: center;">ระดับ 5 91-100</th>	
+				<th style="width: 100px; text-align: center;">คะแนนที่ได้ 0 - 100</th>	
 			</tr>		
 			<?php 
 			$arrItmId = array();
 
 			$sql = "SELECT t.`id`, t.`termPersonId`, t.`evalTypeId`, t.`evalTypeName`, t.`topicGroupId`, t.`topicGroupName`, t.`seqNo`, t.`topicId`, t.`topicName`
-			, rd.score 
+			, (SELECT rd.score FROM eval_result rh 
+						INNER JOIN eval_result_detail rd ON rd.hdrId=rh.id 
+						WHERE rh.termPersonId=t.termPersonId 
+						AND rd.subjectId=t.id 						
+						AND rh.evaluatorPersonId=:evaluatorPersonId) as score 
 			FROM `eval_data` t 
-			LEFT JOIN eval_result rh ON rh.termPersonId=t.termPersonId 
-			LEFT JOIN eval_result_detail rd ON rd.hdrId=rh.id AND rd.subjectId=t.id 
 			WHERE t.topicGroupId=2 
 			AND t.termPersonId=:termPersonId
 			ORDER BY t.seqNo 
-			";
+			"; 
 			$stmt = $pdo->prepare($sql);
 			$stmt->bindParam(':termPersonId', $termPersonId);
+			$stmt->bindParam(':evaluatorPersonId', $evaluatorId);
 			$stmt->execute();
 			$rowNo=1; while ($row = $stmt->fetch() ) { 			
 			?>
 			<tr>
 				<td><?= $rowNo; ?></td>	
-				<td><?= $row['topicName']; ?></td>				
-				<td>0 - 60</td>			
-				<td>61 - 70</td>			
-				<td>71 - 80</td>			
-				<td>81 - 90</td>			
-				<td>90 - 100</td>						
+				<td><?= $row['topicName']; ?></td>	
+				<td><?= $row['topicDesc']; ?></td>				
+				<td> </td>			
+				<td> </td>			
+				<td> </td>			
+				<td> </td>			
+				<td> </td>						
 				<td>
 					 <input type="text" name="<?=$row['id'];?>" class="form-control" style="width: 80px; text-align: right;" value="<?=$row['score'];?>" data-skm-msg="จำเป็น" required />
 				</td>
@@ -312,39 +301,44 @@
       <table class="table table-striped">
 			<tr>
 				<th>ลำดับ</th>
-				<th>หัวข้อการประเมิน</th>
-				<th style="width: 80px;">ระดับ 1</th>	
-				<th style="width: 80px;">ระดับ 2</th>
-				<th style="width: 80px;">ระดับ 3</th>
-				<th style="width: 80px;">ระดับ 4</th>
-				<th style="width: 80px;">ระดับ 5</th>	
-				<th style="width: 80px;">คะแนนที่ได้ 0 - 100</th>	
+				<th>หัวข้อการประเมิน</th>				
+				<th>คำอธิบาย</th>
+				<th style="width: 80px; text-align: center;">ระดับ 1 0-60</th>	
+				<th style="width: 80px; text-align: center;">ระดับ 2 61-70</th>
+				<th style="width: 80px; text-align: center;">ระดับ 3 71-80</th>
+				<th style="width: 80px; text-align: center;">ระดับ 4 81-90</th>
+				<th style="width: 80px; text-align: center;">ระดับ 5 91-100</th>	
+				<th style="width: 100px; text-align: center;">คะแนนที่ได้ 0 - 100</th>	
 			</tr>		
 			<?php 
 			$arrItmId = array();
 
 			$sql = "SELECT t.`id`, t.`termPersonId`, t.`evalTypeId`, t.`evalTypeName`, t.`topicGroupId`, t.`topicGroupName`, t.`seqNo`, t.`topicId`, t.`topicName`
-			, rd.score 
+			, (SELECT rd.score FROM eval_result rh 
+						INNER JOIN eval_result_detail rd ON rd.hdrId=rh.id 
+						WHERE rh.termPersonId=t.termPersonId 
+						AND rd.subjectId=t.id 						
+						AND rh.evaluatorPersonId=:evaluatorPersonId) as score 
 			FROM `eval_data` t 
-			LEFT JOIN eval_result rh ON rh.termPersonId=t.termPersonId 
-			LEFT JOIN eval_result_detail rd ON rd.hdrId=rh.id AND rd.subjectId=t.id 
 			WHERE t.topicGroupId=3 
 			AND t.termPersonId=:termPersonId
 			ORDER BY t.seqNo 
-			";
+			"; 
 			$stmt = $pdo->prepare($sql);
 			$stmt->bindParam(':termPersonId', $termPersonId);
+			$stmt->bindParam(':evaluatorPersonId', $evaluatorId);
 			$stmt->execute();
 			$rowNo=1; while ($row = $stmt->fetch() ) { 			
 			?>
 			<tr>
 				<td><?= $rowNo; ?></td>	
-				<td><?= $row['topicName']; ?></td>				
-				<td>0 - 60</td>			
-				<td>61 - 70</td>			
-				<td>71 - 80</td>			
-				<td>81 - 90</td>			
-				<td>90 - 100</td>				
+				<td><?= $row['topicName']; ?></td>	
+				<td><?= $row['topicDesc']; ?></td>				
+				<td> </td>			
+				<td> </td>			
+				<td> </td>			
+				<td> </td>			
+				<td> </td>				
 				<td>
 					 <input type="text" name="<?=$row['id'];?>" class="form-control" style="width: 80px; text-align: right;" value="<?=$row['score'];?>" data-skm-msg="จำเป็น" required />
 				</td>
@@ -372,39 +366,44 @@
       <table class="table table-striped">
 			<tr>
 				<th>ลำดับ</th>
-				<th>หัวข้อการประเมิน</th>
-				<th style="width: 80px;">ระดับ 1</th>	
-				<th style="width: 80px;">ระดับ 2</th>
-				<th style="width: 80px;">ระดับ 3</th>
-				<th style="width: 80px;">ระดับ 4</th>
-				<th style="width: 80px;">ระดับ 5</th>	
-				<th>คะแนนที่ได้ 0 - 100</th>	
+				<th>หัวข้อการประเมิน</th>				
+				<th>คำอธิบาย</th>
+				<th style="width: 80px; text-align: center;">ระดับ 1 0-60</th>	
+				<th style="width: 80px; text-align: center;">ระดับ 2 61-70</th>
+				<th style="width: 80px; text-align: center;">ระดับ 3 71-80</th>
+				<th style="width: 80px; text-align: center;">ระดับ 4 81-90</th>
+				<th style="width: 80px; text-align: center;">ระดับ 5 91-100</th>	
+				<th style="width: 100px; text-align: center;">คะแนนที่ได้ 0 - 100</th>	
 			</tr>		
 			<?php 
 			$arrItmId = array();
 
 			$sql = "SELECT t.`id`, t.`termPersonId`, t.`evalTypeId`, t.`evalTypeName`, t.`topicGroupId`, t.`topicGroupName`, t.`seqNo`, t.`topicId`, t.`topicName`
-			, rd.score 
+			, (SELECT rd.score FROM eval_result rh 
+						INNER JOIN eval_result_detail rd ON rd.hdrId=rh.id 
+						WHERE rh.termPersonId=t.termPersonId 
+						AND rd.subjectId=t.id 						
+						AND rh.evaluatorPersonId=:evaluatorPersonId) as score 
 			FROM `eval_data` t 
-			LEFT JOIN eval_result rh ON rh.termPersonId=t.termPersonId 
-			LEFT JOIN eval_result_detail rd ON rd.hdrId=rh.id AND rd.subjectId=t.id 
-			WHERE t.topicGroupId=4 
+			WHERE t.topicGroupId=4
 			AND t.termPersonId=:termPersonId
 			ORDER BY t.seqNo 
-			";
+			"; 
 			$stmt = $pdo->prepare($sql);
 			$stmt->bindParam(':termPersonId', $termPersonId);
+			$stmt->bindParam(':evaluatorPersonId', $evaluatorId);
 			$stmt->execute();
 			$rowNo=1; while ($row = $stmt->fetch() ) { 			
 			?>
 			<tr>
 				<td><?= $rowNo; ?></td>	
-				<td><?= $row['topicName']; ?></td>				
-				<td>0 - 60</td>			
-				<td>61 - 70</td>			
-				<td>71 - 80</td>			
-				<td>81 - 90</td>			
-				<td>90 - 100</td>				
+				<td><?= $row['topicName']; ?></td>	
+				<td><?= $row['topicDesc']; ?></td>				
+				<td> </td>			
+				<td> </td>			
+				<td> </td>			
+				<td> </td>			
+				<td> </td>				
 				<td>
 					 <input type="text" name="<?=$row['id'];?>" class="form-control" style="width: 80px; text-align: right;" value="<?=$row['score'];?>" data-skm-msg="จำเป็น" required />
 				</td>
@@ -434,8 +433,20 @@
 		ความคิดเห็น : 	
 			</div>
 			<div class="col-md-3">
-				
-		<textarea name="remark" class="form-control" cols="50" rows="5" ></textarea>
+		<?php		
+			$sql = "
+			SELECT hd.id
+			,(SELECT x.remark FROM eval_result x WHERE x.termPersonId=hd.id AND x.evaluatorPersonId=:evaluatorPersonId ) as remark
+			FROM eval_term_person hd 
+			WHERE hd.id=:termPersonId 
+			";
+			$stmt = $pdo->prepare($sql);
+			$stmt->bindParam(':termPersonId', $termPersonId);
+			$stmt->bindParam(':evaluatorPersonId', $evaluatorId);
+			$stmt->execute();
+			$row=$stmt->fetch();
+			?>
+		<textarea name="remark" class="form-control" cols="50" rows="5" ><?=$row['remark'];?></textarea>
 			</div>
 		</div>
 
@@ -650,7 +661,7 @@ $(document).ready(function() {
 						type: data.success,
 						position:'top-center'
 					});
-					location.href = "<?=$rootPage;?>_view.php?tpId="+data.id;
+					location.href = "<?=$rootPage;?>_view.php?personId=<?=$personId;?>";
 					//location.reload();
 				} else {
 					alert(data.message);

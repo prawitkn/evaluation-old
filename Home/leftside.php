@@ -20,6 +20,7 @@
     <li><a href="term_list.php"><i class="fa fa-list"></i> <span>ห้วงเวลาการประเมิน</span></a></li>
     <li><a href="topicGroup_list.php"><i class="fa fa-list"></i> <span>กลุ่มหัวข้อการประเมิน</span></a></li>
     <li><a href="topic_list.php"><i class="fa fa-list"></i> <span>หัวข้อประเมิน</span></a></li>
+    <li><a href="gradingGroup_list.php"><i class="fa fa-list"></i> <span>กลุ่มการตัดเกรด</span></a></li>
 
     <li><a href="section_list.php"><i class="fa fa-list"></i> <span>แผนก</span></a></li>
     <li><a href="positionRank_list.php"><i class="fa fa-list"></i> <span>ระดับตำแหน่ง</span></a></li>

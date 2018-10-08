@@ -10,13 +10,18 @@
 				try{	
 
 					$sectionId=$_POST['sectionId'];
+					$gradingGroupId=$_POST['gradingGroupId'];
 					
 					$sql = "SELECT hdr.Id 
 					FROM eval_term_person hdr
-					INNER JOIN eval_person ps ON ps.id=hdr.personId 
+					INNER JOIN eval_person ps ON ps.Id=hdr.personId 
+					INNER JOIN eval_position pos ON pos.id=ps.positionId 
+					INNER JOIN eval_section st ON st.id=pos.sectionId 
 					WHERE hdr.termId=(SELECT id FROM eval_term WHERE isCurrent=1) ";
-					if( $sectionId <> "" ) { $sql .= "AND ps.sectionId=:sectionId "; }
+					if( $gradingGroupId <> "" ) { $sql .= "AND ps.gradingGroupId=:gradingGroupId "; }
+					if( $sectionId <> "" ) { $sql .= "AND pos.sectionId=:sectionId "; }
 					$stmt = $pdo->prepare($sql);				
+					if( $gradingGroupId <> "" ) { $stmt->bindParam(':gradingGroupId', $gradingGroupId); }
 					if( $sectionId <> "" ) { $stmt->bindParam(':sectionId', $sectionId); }
 					$stmt->execute();					
 					$rowCount=$stmt->rowCount();
@@ -36,20 +41,25 @@
 					$start=$_POST['start'];
 					$rows=$_POST['rows'];
 					$sectionId=$_POST['sectionId'];
+					$gradingGroupId=$_POST['gradingGroupId'];
 
 					$sql = "SELECT hdr.`id`, hdr.`termId`, hdr.`personId`
 					, hdr.`evaluatorPersonId`, hdr.`evaluatorPersonId2`, hdr.`evaluatorPersonId3`
-					, ps.code, ps.fullName, ps.sectionId, ps.positionName 
-					, st.name as sectionName 
+					, ps.code, ps.fullName
+					, ps.positionId, pos.name as positionName 
+					,pos.sectionId, st.name as sectionName 
 					FROM eval_term_person hdr
 					INNER JOIN eval_person ps ON ps.Id=hdr.personId 
-					INNER JOIN eval_section st ON st.id=ps.sectionId 
+					INNER JOIN eval_position pos ON pos.id=ps.positionId 
+					INNER JOIN eval_section st ON st.id=pos.sectionId 
 					WHERE hdr.termId=(SELECT id FROM eval_term WHERE isCurrent=1) ";
-					if( $sectionId <> "" ) { $sql .= "AND ps.sectionId=:sectionId "; }
+					if( $gradingGroupId <> "" ) { $sql .= "AND ps.gradingGroupId=:gradingGroupId "; }
+					if( $sectionId <> "" ) { $sql .= "AND pos.sectionId=:sectionId "; }
 					$sql .= "ORDER BY hdr.id ASC ";
 					//$sql.="LIMIT $start, $rows ";
 					$stmt = $pdo->prepare($sql);					
 					if( $sectionId <> "" ) { $stmt->bindParam(':sectionId', $sectionId); }
+					if( $gradingGroupId <> "" ) { $stmt->bindParam(':gradingGroupId', $gradingGroupId); }
 						
 					$stmt->execute();					
 					$rowCount=$stmt->rowCount();
@@ -91,17 +101,17 @@
 					
 					$pdo->beginTransaction();	
 					
-					if(!empty($_POST['Id']) and isset($_POST['Id']))
+					if(!empty($_POST['id']) and isset($_POST['id']))
 					{						
 						//$arrProdItems=explode(',', $prodItems);
-						foreach($_POST['Id'] as $index => $Id )
+						foreach($_POST['id'] as $index => $id )
 						{	
 							$sql = "UPDATE `eval_term_person` SET evaluatorPersonId=:evaluatorPersonId
 							, evaluatorPersonId2=:evaluatorPersonId2, evaluatorPersonId3=:evaluatorPersonId3
-							WHERE Id=:Id 
+							WHERE id=:id 
 							";			
 							$stmt = $pdo->prepare($sql);			
-							$stmt->bindParam(':Id', $Id);	
+							$stmt->bindParam(':id', $id);	
 							$stmt->bindParam(':evaluatorPersonId', $_POST['evaluatorPersonId'][$index]);
 							$stmt->bindParam(':evaluatorPersonId2', $_POST['evaluatorPersonId2'][$index]);
 							$stmt->bindParam(':evaluatorPersonId3', $_POST['evaluatorPersonId3'][$index]);

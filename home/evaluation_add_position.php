@@ -281,7 +281,7 @@ $(document).ready(function() {
 	});
 	//end btnSubmit
 
-	$('a[name=btnSubmit2]').click(function(){
+	$('a[name=btnSubmit2]').click(function(){ alert('big');
 		$.post({
 			url: '<?=$rootPage;?>_ajax.php',
 			data: $("#form2").serialize(),
@@ -293,7 +293,7 @@ $(document).ready(function() {
 					type: data.status,
 					position:'top-center'
 				});
-				window.location.href = history.go(-1);
+				history.go(-1);
 			} else {
 				alert(data.message);
 				$.smkAlert({

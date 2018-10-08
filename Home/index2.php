@@ -134,6 +134,7 @@
                 WHERE 1=1
                 AND hdr.id=:id 
                 UNION
+
                 SELECT hdr.id, ps.fullName as fullName, pos.name as positionName 
                 FROM eval_term_person hdr 
                 INNER JOIN eval_person ps ON ps.id=hdr.evaluatorPersonId2
@@ -141,6 +142,7 @@
                 WHERE 1=1
                 AND hdr.id=:id2 
                 UNION
+
                 SELECT hdr.id, ps.fullName as fullName, pos.name as positionName 
                 FROM eval_term_person hdr 
                 INNER JOIN eval_person ps ON ps.id=hdr.evaluatorPersonId3
@@ -170,7 +172,6 @@
 
 
               <div class="tab-pane" id="evaluatetion">
-
                 <table class="table table-hover">
                 <thead>
                   <tr>
@@ -182,16 +183,18 @@
                 </thead>
                 <tbody>
                 <?php
-                $sql = "SELECT hdr.id, ps.fullName , pos.name as positionName 
+                $sql = "SELECT hdr.id, hdr.personId, ps.fullName , pos.name as positionName 
                 FROM eval_term_person hdr 
-                INNER JOIN eval_person ps ON ps.id=hdr.personId                
+                LEFT JOIN eval_person ps ON ps.id=hdr.personId                
                 LEFT JOIN eval_position pos ON pos.id=hdr.personId
                 WHERE 1=1
+                AND hdr.termId=:termId
                 AND ( hdr.evaluatorPersonId=:evaluatorPersonId OR 
                     hdr.evaluatorPersonId2=:evaluatorPersonId2 OR
                     hdr.evaluatorPersonId3=:evaluatorPersonId3 ) 
               ";
                 $stmt = $pdo->prepare($sql);    
+                $stmt->bindParam(':termId', $termId); 
                 $stmt->bindParam(':evaluatorPersonId', $personId); 
                 $stmt->bindParam(':evaluatorPersonId2', $personId);                 
                 $stmt->bindParam(':evaluatorPersonId3', $personId);           
@@ -202,9 +205,9 @@
                   <td>'.$row['fullName'].'</td>
                   <td>'.$row['positionName'].'</td>
                   <td>
-                    <a href="evaluate.php?personId='.$row['id'].'"  
+                    <a href="evaluate.php?personId='.$row['personId'].'"  
                         class="btn btn-primary"><i class="fa fa-edit"></i> ประเมิน</a>
-                    <a href="evaluate_view.php?tpId='.$row['id'].'" class="btn btn-primary"><i fa fa-static></i> รายละเอียด</a>'.
+                    <a href="evaluate_view.php?personId='.$row['personId'].'" class="btn btn-primary"><i fa fa-static></i> รายละเอียด</a>'.
                   '</td>
                   </tr>';
                   $rowNo+=1;

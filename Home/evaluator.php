@@ -14,10 +14,7 @@
 <?php 
 
 	$rootPage = 'evaluator';
-	$tb = 'eval_section';
-
-	$sectionId=( isset($_GET['sectionId']) ? $_GET['sectionId'] : '' );
-
+	$tb = '';
 ?>	
 </head>
 <body class="hold-transition skin-yellow sidebar-mini sidebar-collapse">    
@@ -57,19 +54,46 @@
         <div class="box-tools pull-right">
           <!-- Buttons, labels, and many other things can be placed here! -->
           <!-- Here is a label for example -->
-          <?php
-                $sql = "
-				SELECT COUNT(*) AS countTotal 
-				FROM eval_term_person hdr
-				INNER JOIN eval_person ps ON ps.Id=hdr.personId ";
-				if($sectionId<>""){ $sql .= "AND hdr.sectionId=:sectionId "; }
+          <?php             
 
-                $stmt = $pdo->prepare($sql);	
-                if($sectionId<>""){ $stmt->bindParam(':sectionId', $sectionId); }
-				$stmt->execute();	
-				$countTotal = $stmt->fetch()['countTotal'];			
-				
-				$rows=20;
+				$start=$_GET['start'];
+				$rows=$_GET['rows'];
+				$sectionId=( isset($_GET['sectionId']) ? $_GET['sectionId'] : '' );
+				$gradingGroupId=( isset($_GET['gradingGroupId']) ? $_GET['gradingGroupId'] : '' );
+
+				$evaluatorPersonId=0; 
+				$evaluatorPersonId2=0; 
+				$evaluatorPersonId3=0; 
+
+				if($sectionId!="" OR $gradingGroupId != "" ){
+					$sql = "SELECT hdr.`id`, hdr.`termId`, hdr.`personId`
+					, hdr.`evaluatorPersonId`, hdr.`evaluatorPersonId2`, hdr.`evaluatorPersonId3`
+					, ps.code, ps.fullName
+					, ps.positionId, pos.name as positionName 
+					,pos.sectionId, st.name as sectionName 
+					FROM eval_term_person hdr
+					INNER JOIN eval_person ps ON ps.Id=hdr.personId 
+					INNER JOIN eval_position pos ON pos.id=ps.positionId 
+					INNER JOIN eval_section st ON st.id=pos.sectionId 
+					WHERE hdr.termId=(SELECT id FROM eval_term WHERE isCurrent=1) ";
+					if( $gradingGroupId <> "" ) { $sql .= "AND ps.gradingGroupId=:gradingGroupId "; }
+					if( $sectionId <> "" ) { $sql .= "AND pos.sectionId=:sectionId "; }
+					$sql .= "ORDER BY hdr.id ASC ";
+					//$sql.="LIMIT $start, $rows ";
+					$stmt = $pdo->prepare($sql);					
+					if( $sectionId <> "" ) { $stmt->bindParam(':sectionId', $sectionId); }
+					if( $gradingGroupId <> "" ) { $stmt->bindParam(':gradingGroupId', $gradingGroupId); }
+						
+					$stmt->execute();					
+					$countTotal=$stmt->rowCount();
+					$row=$stmt->fetch();	
+
+					$evaluatorPersonId=$row['evaluatorPersonId']; 
+					$evaluatorPersonId2=$row['evaluatorPersonId2']; 
+					$evaluatorPersonId3=$row['evaluatorPersonId3']; 
+				}//endif GET
+
+				$rows=100;
 				$page=0;
 				if( !empty($_GET["page"]) and isset($_GET["page"]) ) $page=$_GET["page"];
 				if($page<=0) $page=1;
@@ -77,7 +101,7 @@
 				$total_page=ceil($total_data/$rows);
 				if($page>=$total_page) $page=$total_page;
 				$start=($page-1)*$rows;
-				if($start<0) $start=0;		
+				if($start<0) $start=0;	
           ?>
           <span id="countTotal" class="label label-primary">จำนวน <?php echo $countTotal; ?> รายการ</span>
         </div><!-- /.box-tools -->
@@ -87,20 +111,36 @@
 				
 					<div class="row">
 							<div class="col-md-3">					
-								<label for="sectionId">แผนก </label>
+								<label for="sectionId">แผนก </label><br/>
 								<select name="sectionId" class="form form-control">
+									<option value=""> - - ทั้งหมด - - </option>
 									<?php
 										$sql = "SELECT `id`, `seqNo`, `code`, `name` FROM eval_section ORDER BY seqNo, id ";
-										$stmt = $pdo->prepare($sql);
-										$stmt->execute();	
-										While ( $itm = $stmt->fetch() ){
+										$stm = $pdo->prepare($sql);
+										$stm->execute();	
+										While ( $itm = $stm->fetch() ){
 											$selected=($sectionId==$itm['id']?' selected ':'');
 											echo '<option value="'.$itm['id'].'" '.$selected.' >'.$itm['name'].'</option>';
 										}
 									?>
-								</select>
-								
-								
+								</select>	
+							</div>  
+							<!--/.col-md-->
+
+							<div class="col-md-3">					
+								<label for="gradingGroupId">กลุ่มการตัดเกรด </label><br/>
+								<select name="gradingGroupId" id="gradingGroupId" class="form form-control">
+									<option value=""> - - ทั้งหมด - - </option>
+									<?php
+										$sql = "SELECT `id`, `seqNo`, `name` FROM eval_grading_group WHERE statusId=1  ORDER BY seqNo, id ";
+										$stm = $pdo->prepare($sql);
+										$stm->execute();	
+										While ( $itm = $stm->fetch() ){
+											$selected=($gradingGroupId==$itm['id']?' selected ':'');
+											echo '<option value="'.$itm['id'].'" '.$selected.' >'.$itm['name'].'</option>';
+										}
+									?>
+								</select>	
 							</div>  
 							<!--/.col-md-->
 							
@@ -132,7 +172,85 @@
 					<th>#</th>
                 </tr></thead>
                 <tbody>
-                	
+                <?php $rowNo=($start+1); while ($row = $stmt->fetch()) { ?>
+
+                <tr>
+                	 <td><?= $rowNo; ?><input type="hidden" name="id[]" value="<?=$row['id'];?>" /></td>
+                	 <td><?= $row['code']; ?></td>
+                	 <td><?= $row['fullName']; ?></td>
+                	 <td><?= $row['positionName']; ?></td>
+                    <td>
+                    	<select name="evaluatorPersonId[]"  class="form form-control">
+							<option value=""> - - ทั้งหมด - - </option>
+							<?php
+								$sql="SELECT hd.id, hd.fullName 
+								FROM eval_person hd 
+								WHERE hd.positionId IN (SELECT pos.id FROM eval_position pos
+														WHERE pos.seqNo < (SELECT x.seqNo FROM eval_position x
+																			WHERE x.id=:positionId
+																			)
+														)
+								AND hd.statusId=1 
+								";
+								$stm = $pdo->prepare($sql);								
+								$stm->bindParam(':positionId', $row['positionId'] );
+								$stm->execute();	
+								While ( $itm = $stm->fetch() ){
+									$selected=($row['evaluatorPersonId']==$itm['id']?' selected ':'');
+									echo '<option value="'.$itm['id'].'" '.$selected.' >'.$itm['fullName'].'</option>';
+								}
+							?>
+						</select>	
+                  	</td>
+                    <td>
+                    	<select name="evaluatorPersonId2[]"  class="form form-control">
+							<option value=""> - - ทั้งหมด - - </option>
+							<?php
+								$sql="SELECT hd.id, hd.fullName 
+								FROM eval_person hd 
+								WHERE hd.positionId IN (SELECT pos.id FROM eval_position pos
+														WHERE pos.seqNo < (SELECT x.seqNo FROM eval_position x
+																			WHERE x.id=:positionId
+																			)
+														)
+								AND hd.statusId=1 
+								";
+								$stm = $pdo->prepare($sql);								
+								$stm->bindParam(':positionId', $row['positionId'] );
+								$stm->execute();	
+								While ( $itm = $stm->fetch() ){
+									$selected=($row['evaluatorPersonId2']==$itm['id']?' selected ':'');
+									echo '<option value="'.$itm['id'].'" '.$selected.' >'.$itm['fullName'].'</option>';
+								}
+							?>
+						</select>	
+                    </td>
+                    <td>
+                    	<select name="evaluatorPersonId3[]"  class="form form-control">
+							<option value=""> - - ทั้งหมด - - </option>
+							<?php
+								$sql="SELECT hd.id, hd.fullName 
+								FROM eval_person hd 
+								WHERE hd.positionId IN (SELECT pos.id FROM eval_position pos
+														WHERE pos.seqNo < (SELECT x.seqNo FROM eval_position x
+																			WHERE x.id=:positionId
+																			)
+														)
+								AND hd.statusId=1 
+								";
+								$stm = $pdo->prepare($sql);								
+								$stm->bindParam(':positionId', $row['positionId'] );
+								$stm->execute();	
+								While ( $itm = $stm->fetch() ){
+									$selected=($row['evaluatorPersonId3']==$itm['id']?' selected ':'');
+									echo '<option value="'.$itm['id'].'" '.$selected.' >'.$itm['fullName'].'</option>';
+								}
+							?>
+						</select>	
+                    </td>			
+                    <td><a href="evaluation.php?tpId=<?=$row['id'];?>" class="btn btn-primary"><i class="fa fa-edit"></i> กำหนดหัวข้อประเมิน</a></td>
+                </tr>
+                <?php $rowNo+=1; } ?>
                 </tbody>
             </table>
 			</form>
@@ -214,11 +332,12 @@ $(document).ready(function() {
 			//return $html;
 	}
 
-	function getListTotal(sectionId){	
+	function getListTotal(sectionId, gradingGroupId){	
 		if( sectionId == "") {return 0;	}
 		var params = {
 			action: 'getListTotal',
-			sectionId: sectionId
+			sectionId: sectionId,
+			gradingGroupId: gradingGroupId
 		}; //alert(params.sendDate);
 		/* Send the data using post and put the results in a div */
 		$.ajax({
@@ -240,14 +359,15 @@ $(document).ready(function() {
 			return 0;
 		}); 
 	}
-	function getList(sectionId){ //alert(DeptName);
-		if( getListTotal(sectionId) <= 0 ) {
+	function getList(sectionId, gradingGroupId){ //alert(DeptName);
+		if( getListTotal(sectionId, gradingGroupId) <= 0 ) {
 
 		}else{	//alert('getListTotal ok');		
 			//alert(getEvaluatorList('evaluatorPersonId'));
 			var params = {
 				action: 'getList',
 				sectionId: sectionId,
+				gradingGroupId: gradingGroupId,
 				start: 0,
 				rows: 200
 			}; //alert(params.sendDate);
@@ -314,7 +434,7 @@ $(document).ready(function() {
 				}); 
 		}//.if rowCount <=0 
 	}
-	getList('<?=$sectionId;?>');
+	//getList('<?=$sectionId;?>','<?=$gradingGroupId;?>');
 
 	$('a[name=btnSubmit2]').click(function(){
 		$.post({

@@ -12,16 +12,13 @@
 ?>
 
 <?php 
-	$rootPage = 'topic';
-	$tb = 'eval_topic';
 
-	$searchWord=( isset($_GET['searchWord']) ? $_GET['searchWord'] : '' );
-	$topicGroupId=( isset($_GET['topicGroupId']) ? $_GET['topicGroupId'] : '' );
-	$positionGroupId=( isset($_GET['positionGroupId']) ? $_GET['positionGroupId'] : '' );
-	$positionId=( isset($_GET['positionId']) ? $_GET['positionId'] : '' );
+	$rootPage = 'gradingGroup';
+	$tb = 'eval_grading_group';
+
 ?>	
 </head>
-<body class="hold-transition skin-yellow sidebar-mini ">    
+<body class="hold-transition skin-yellow sidebar-mini">    
 
 <div class="wrapper">
 
@@ -36,14 +33,14 @@
     <!-- Content Header (Page header) -->
 	<section class="content-header">
 		<h1><i class="fa fa-th-list"></i>
-       หัวข้อการประเมิน
+       กลุ่มการตัดเกรด
         <small>การจัดการข้อมูลหลัก</small>
       </h1>
 
 
       <ol class="breadcrumb">
        <li><a href="index.php"><i class="fa fa-home"></i>หน้าแรก</a></li>
-       <!--<li><a href="<?=$rootPage;?>_list.php"><i class="fa fa-list"></i>รายการ ตำแหน่ง</a></li>-->
+       <!--<li><a href="<?=$rootPage;?>_list.php"><i class="fa fa-list"></i>รายการ กลุ่มการตัดเกรด</a></li>-->
       </ol>
     </section>
 
@@ -53,10 +50,10 @@
 <!-- To allow only admin to access the content -->      
     <div class="box box-primary">
         <div class="box-header with-border">
-		<label class="box-title">รายการ หัวข้อการประเมิน</label>
+		<label class="box-title">รายการ กลุ่มการตัดเกรด</label>
 
 
-			<a href="<?=$rootPage;?>_data.php?id=" class="btn btn-primary"><i class="glyphicon glyphicon-plus"></i> เพิ่ม หัวข้อการประเมิน</a>
+			<a href="<?=$rootPage;?>_data.php?id=" class="btn btn-primary"><i class="glyphicon glyphicon-plus"></i> เพิ่ม กลุ่มการตัดเกรด</a>
 		
 		
         <div class="box-tools pull-right">
@@ -66,21 +63,19 @@
                 //$sql_user = "SELECT COUNT(*) AS COUNTUSER FROM wh_user";
                // $result_user = mysqli_query($link, $sql_user);
                // $count_user = mysqli_fetch_assoc($result_user);
-	
+				
+				$search_word="";
                 $sql = "
 				SELECT COUNT(*) AS countTotal 
 				FROM `".$tb."` hdr  
 				WHERE 1=1 ";
-				if($searchWord<>""){ $sql .= "AND hdr.name like :searchWord "; }
-				if($topicGroupId<>""){ $sql .= "AND hdr.topicGroupId like :topicGroupId "; }
-				if($positionGroupId<>""){ $sql .= "AND hdr.positionGroupId like :positionGroupId "; }
-				if($positionId<>""){ $sql .= "AND hdr.positionId like :positionId "; }
-
+				if(isset($_GET['search_word']) and isset($_GET['search_word'])){
+					$search_word=$_GET['search_word'];
+					$sql .= "and (hdr.name like '%".$_GET['search_word']."%' ) ";
+				}			
+                //$result = mysqli_query($link, $sql);
+                //$countTotal = mysqli_fetch_assoc($result);
                 $stmt = $pdo->prepare($sql);	
-                if($searchWord<>""){ $tmp='%'.$searchWord.'%'; $stmt->bindParam(':searchWord', $tmp); }
-                if($topicGroupId<>""){ $stmt->bindParam(':topicGroupId', $topicGroupId); }
-                if($positionGroupId<>""){ $stmt->bindParam(':positionGroupId', $positionGroupId); }
-                if($positionId<>""){ $stmt->bindParam(':positionId', $positionId); }
 				$stmt->execute();	//echo $sql;
 				$countTotal = $stmt->fetch()['countTotal'];
 				
@@ -98,77 +93,12 @@
         </div><!-- /.box-tools -->
         </div><!-- /.box-header -->
         <div class="box-body">
-			<div class="row">								
+			<div class="row col-md-12">				
 				<form id="form1" action="<?=$rootPage;?>_list.php" method="get" class="form" novalidate>
-					<div class="col-md-3">
+					<div class="col-md-6">
 						<div class="form-group">
-	                        <label for="topicGroupId">กลุ่ม หัวข้อประเมิน</label>
-							<select id="topicGroupId" name="topicGroupId" class="form-control"  data-smk-msg="จำเป็น" required>
-								<option value="">--ทั้งหมด--</option>
-								<?php
-								$sql = "SELECT `id`, `code`, `name`, `statusId`  FROM `eval_topic_group` WHERE StatusId=1 ";		
-								$stmt = $pdo->prepare($sql);		
-								$stmt->execute();
-								while($itm = $stmt->fetch()){
-									$selected=( $topicGroupId==$itm['id'] ? ' selected ' : '' );
-									echo '<option value="'.$itm['id'].'" '.$selected.'
-										 >'.$itm['name'].'</option>';
-								}
-								?>
-							</select>
-	                    </div>		                    
-					</div>
-					<!--/.col-md-->
-
-					<div class="col-md-2">
-						<div class="form-group">
-	                        <label for="positionGroupId">กลุ่ม ตำแหน่ง</label>
-							<select id="positionGroupId" name="positionGroupId" class="form-control" >
-								<option value="">--ทั้งหมด--</option>
-								<?php
-								$sql = "SELECT `id`, `code`, `name`, `statusId`  FROM `eval_position_group` WHERE StatusId=1 ";		
-								$stmt = $pdo->prepare($sql);		
-								$stmt->execute();
-								while($itm = $stmt->fetch()){
-									$selected=( $positionGroupId==$itm['id'] ? ' selected ' : '' );
-									echo '<option value="'.$itm['id'].'" '.$selected.'
-										 >'.$itm['name'].'</option>';
-								}
-								?>
-							</select>
-	                    </div>		                    
-					</div>
-					<!--/.col-md-->
-
-					<div class="col-md-2">
-						<div class="form-group">
-	                        <label for="positionId">ตำแหน่ง</label>
-							<select id="positionId" name="positionId" class="form-control" >
-								<option value="">--ทั้งหมด--</option>
-								<?php
-								$sql = "SELECT hd.`id`, hd.`code`, hd.`name`, hd.`statusId`  
-								, sec.name as sectionName 
-								FROM `eval_position` hd 
-								INNER JOIN eval_section sec ON sec.id=hd.sectionId 
-								WHERE hd.statusId=1 ";		
-								$sql .= "ORDER BY hd.sectionId, hd.name ";
-								$stmt = $pdo->prepare($sql);		
-								$stmt->execute();
-								while($itm = $stmt->fetch()){
-									$selected=( $positionId==$itm['id'] ? ' selected ' : '' );
-									echo '<option value="'.$itm['id'].'" '.$selected.'
-										 >'.$itm['sectionName'].' => '.$itm['name'].'</option>';
-								}
-								?>
-							</select>
-	                    </div>		                    
-					</div>
-					<!--/.col-md-->
-
-					<div class="col-md-4">
-						<div class="form-group">
-	                        <label for="searchWord">บางส่วนของ หัวข้อการประเมิน เพื่อใช้ค้นหาข้อมูล</label>
-							<input id="searchWord" type="text" class="form-control" name="searchWord" value="<?=$searchWord;?>">
+	                        <label for="search_word">บางส่วนของ กลุ่มการตัดเกรด เพื่อใช้ค้นหาข้อมูล</label>
+							<input id="search_word" type="text" class="form-control" name="search_word" data-smk-msg="Require userFullname."required>
 	                    </div>	
 	                    <!--form-group-->
 					</div>
@@ -189,37 +119,23 @@
 			<!--/.row-->
            <?php
 				$sql = "
-				SELECT hdr.`id`, hdr.`seqNo`, hdr.`name`, hdr.`nameDesc`, hdr.`statusId`
+				SELECT hdr.`id`, hdr.`seqNo`, hdr.`name`, hdr.`statusId`
 				, hdr.`createTime`, hdr.`createUserId`, hdr.`updateTime`, hdr.`updateUserId`
-				, IFNULL(tg.name,'ทั้งหมด') as topicGroupName
-				, IFNULL(pg.name,'ทั้งหมด') as positionGroupName
-				, IFNULL(p.name,'ทั้งหมด') as positionName 
-
-
 				, uc.userFullname as createUserName 
 				, uu.userFullname as updateUserName 
 				FROM `".$tb."` hdr 
-				LEFT JOIN eval_topic_group tg ON tg.id=hdr.topicGroupId 
-				LEFT JOIN eval_position_group pg ON pg.id=hdr.positionGroupId 
-				LEFT JOIN eval_position p ON p.id=hdr.positionId 
-
 				LEFT JOIN `eval_user` uc on uc.userId=hdr.createUserId 
 				LEFT JOIN `eval_user` uu on uu.userId=hdr.updateUserId 
 				WHERE 1=1 ";
-				if($searchWord<>""){ $sql .= "AND hdr.name like :searchWord "; }
-				if($topicGroupId<>""){ $sql .= "AND hdr.topicGroupId like :topicGroupId "; }
-				if($positionGroupId<>""){ $sql .= "AND hdr.positionGroupId like :positionGroupId "; }
-				if($positionId<>""){ $sql .= "AND hdr.positionId like :positionId "; }
-
-                $stmt = $pdo->prepare($sql);	
+				if(isset($_GET['search_word']) and isset($_GET['search_word'])){
+					$search_word=$_GET['search_word'];
+					$sql .= "and (hdr.name like '%".$_GET['search_word']."%' ) ";
+				}	
 				$sql .= "ORDER BY hdr.seqNo ASC
 						LIMIT $start, $rows 
 				";		
+                //$result = mysqli_query($link, $sql);
 				$stmt = $pdo->prepare($sql);	
-                if($searchWord<>""){ $tmp='%'.$searchWord.'%'; $stmt->bindParam(':searchWord', $tmp); }
-                if($topicGroupId<>""){ $stmt->bindParam(':topicGroupId', $topicGroupId); }
-                if($positionGroupId<>""){ $stmt->bindParam(':positionGroupId', $positionGroupId); }
-                if($positionId<>""){ $stmt->bindParam(':positionId', $positionId); }
 				$stmt->execute();	//echo $sql;
               
            ?> 
@@ -227,29 +143,24 @@
             	<input type="hidden" name="action" value="tableSubmit" />
             <table class="table table-striped">
                 <tr style="background-color: #ffcc99;">
-					<th>ID</th>
 					<th>ลำดับ</th>
-					<th>หัวข้อประเมิน</th>
-					<th>เป้าหมาย/คำอธิบาย</th>
+					<th>กลุ่มการตัดเกรด</th>
                     <th>สถานะ</th>
                     <th>#</th>
                 </tr>
                 <?php $c_row=($start+1); while ($row = $stmt->fetch()) { 
 						?>
                 <tr>
-					 <td>
-                         <?= $row['id']; ?>
-                    </td>
 					<td>
 						<input type="hidden" name="id[]" value="<?=$row['id'];?>"  />
 						<input type="text" name="seqNo[]" class="form-control" style="width: 50px; text-align: right;" value="<?=$row['seqNo'];?>" onkeypress="return numbersOnly(this, event);" 
 								onpaste="return false;" />
                     </td>
-                    <td>
-                         <?= $row['name']; ?>
+					 <td>
+                         <?= $row['id']; ?>
                     </td>
                     <td>
-                         <?= $row['nameDesc']; ?>
+                         <?= $row['name']; ?>
                     </td>
                     <td>
 						 <?php
@@ -302,15 +213,15 @@
 			<nav>
 			<ul class="pagination">
 				<li <?php if($page==1) echo 'class="disabled"'; ?> >
-					<a href="<?=$rootPage;?>_list.php?searchWord=<?= $searchWord;?>&=page=<?= $page-1; ?>" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a>
+					<a href="<?=$rootPage;?>_list.php?search_word=<?= $search_word;?>&=page=<?= $page-1; ?>" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a>
 				</li>
 				<?php for($i=1; $i<=$total_page;$i++){ ?>
 				<li <?php if($page==$i) echo 'class="active"'; ?> >
-					<a href="<?=$rootPage;?>_list.php?searchWord=<?= $searchWord;?>&page=<?= $i?>" > <?= $i;?></a>			
+					<a href="<?=$rootPage;?>_list.php?search_word=<?= $search_word;?>&page=<?= $i?>" > <?= $i;?></a>			
 				</li>
 				<?php } ?>
 				<li <?php if($page==$total_page) echo 'class="disabled"'; ?> >
-					<a href="<?=$rootPage;?>_list.php?searchWord=<?= $searchWord;?>&page=<?=$page+1?>" aria-labels="Next"><span aria-hidden="true">&raquo;</span></a>
+					<a href="<?=$rootPage;?>_list.php?search_word=<?= $search_word;?>&page=<?=$page+1?>" aria-labels="Next"><span aria-hidden="true">&raquo;</span></a>
 				</li>
 			</ul>
 			</nav>
